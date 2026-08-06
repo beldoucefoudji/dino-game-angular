@@ -1,0 +1,111 @@
+<div class="lobby-page">
+  <header class="lobby-topbar">
+    <div>
+      <p class="eyebrow">Multiplayer Lobby</p>
+      <h1>{{ matchId ? 'The Sunlit Mesa' : 'Loading...' }}</h1>
+      <p class="subtitle">A live-ready arena for up to 8 racers. Gather your crew, lock in your loadout, and launch when the room is primed.</p>
+    </div>
+   <div class="topbar-chip" [class.pending]="players.length < 2">
+      <span class="chip-dot"></span>
+      <span>{{ players.length >= 2 ? 'Ready to race' : 'Waiting for players' }}</span>
+    </div>
+  </header>
+
+  <main class="lobby-main">
+    <section class="lobby-primary">
+      <div class="session-card">
+        <div class="session-copy">
+          <p class="active-session-label">Active session</p>
+          <h2>Shared route · Northern Wilds</h2>
+          <p class="waiting-note">Waiting for players... · Match ID syncs live and the course is warming up.</p>
+        </div>
+        <img class="arena-preview" src="/dino.avif" alt="Dinosaur race preview" />
+      </div>
+
+      <div class="info-grid">
+        <article class="info-card">
+          <p class="panel-title">Session focus</p>
+          <ul>
+            <li>Balanced lanes and fair respawns</li>
+            <li>Short, punchy rounds</li>
+            <li>Live countdown warming up</li>
+          </ul>
+        </article>
+
+        <article class="info-card highlight">
+          <p class="panel-title">Loadout</p>
+          <div class="loadout-preview">
+            <div class="loadout-swatch" [style.background]="selectedColor"></div>
+            <div>
+              <strong>Current color</strong>
+              <p>Choose a dino skin before the race begins.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <aside class="lobby-sidebar">
+      <div class="players-panel">
+        <div class="panel-header">
+          <p class="panel-title">Players ({{ players.length }}/8)</p>
+          <span class="pill">Live</span>
+        </div>
+
+        @for (player of players; track player.userId) {
+          <div class="player-row">
+            <div class="avatar-dot"></div>
+            <div class="player-info">
+              <p class="player-name">{{ player.username }}</p>
+              <p class="player-sub">Explorer · ready for takeoff</p>
+            </div>
+            <span class="ready-pill ready">Ready</span>
+          </div>
+        }
+
+        @if (!players.length) {
+          <p class="empty-state">The room is quiet. Invite a friend to kick off the match.</p>
+        }
+      </div>
+
+      <div class="lobby-code-card">
+        <p class="panel-title">Lobby code</p>
+        <div class="lobby-code">{{ matchId || 'Waiting...' }}</div>
+        <button class="btn-ghost full-width" (click)="copyMatchId()">Copy invite code</button>
+      </div>
+
+      <div class="chat-card">
+        <p class="panel-title">Match briefing</p>
+        <p class="chat-placeholder">Use this room to coordinate your route, timing, and power-up strategy.</p>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="lobby-footer">
+    <div class="footer-actions">
+      <button class="btn-ghost" disabled title="Coming soon">Voice Comms</button>
+      <button class="btn-ghost" disabled title="Coming soon">High Performance Mode</button>
+      <button class="btn-ghost" (click)="openLoadout()">Change Loadout</button>
+    </div>
+    <button class="btn-primary" [disabled]="players.length < 2" (click)="onStartMatch()">Start match</button>
+  </footer>
+
+  @if (showLoadout) {
+    <div class="loadout-overlay" (click)="closeLoadout()">
+      <div class="loadout-modal" (click)="$event.stopPropagation()">
+        <h2>Choose your dino color</h2>
+        <div class="color-grid">
+          @for (color of dinoColors; track color) {
+            <button
+              class="color-swatch"
+              [style.background]="color"
+              [class.selected]="color === selectedColor"
+              (click)="selectColor(color)">
+            </button>
+          }
+        </div>
+        <button class="btn-primary" (click)="closeLoadout()">Done</button>
+      </div>
+    </div>
+  }
+</div>

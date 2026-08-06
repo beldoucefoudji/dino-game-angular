@@ -1,0 +1,8 @@
+name: nakama-node-1
+data_dir: "/nakama/data/"
+
+console:
+  port: 7351
+
+socket:
+  server_key: "defaultkey"

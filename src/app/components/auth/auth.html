@@ -1,0 +1,60 @@
+<div class="auth-page">
+  <div class="auth-header">
+    <h1>Dino Runner</h1>
+    <p>Step into the Natural Flow. A premium sanctuary for high-end motion gaming.</p>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button
+        class="tab"
+        [class.active]="mode === 'login'"
+        (click)="mode = 'login'">Login</button>
+      <button
+        class="tab"
+        [class.active]="mode === 'signup'"
+        (click)="mode = 'signup'">Sign up</button>
+    </div>
+
+    <div class="oauth-row">
+      <button class="oauth-btn" disabled title="Coming soon">Google</button>
+      
+    </div>
+
+    <div class="divider"><span>OR USE EMAIL</span></div>
+
+    <form (ngSubmit)="onSubmit()">
+      <label>Email Address</label>
+      <input type="email" placeholder="runner@example.com" [(ngModel)]="email" name="email" required />
+
+      <label>Password</label>
+      <input type="password" placeholder="••••••••" [(ngModel)]="password" name="password" required />
+
+      @if (mode === 'login') {
+        <div class="options-row">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="keepSignedIn" name="keepSignedIn" />
+            Keep me signed in
+          </label>
+          <a href="#">Forgot password?</a>
+        </div>
+      }
+
+      @if (errorMessage) {
+        <p class="error-text">{{ errorMessage }}</p>
+      }
+
+      <button type="submit" class="btn-primary submit-btn" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Connecting...' : (mode === 'login' ? 'Join the Race' : 'Create Account') }}
+      </button>
+
+      <button type="button" class="btn-ghost submit-btn" (click)="goHome()">
+        Back to Home
+      </button>
+    </form>
+
+    <p class="terms">
+      By joining, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+    </p>
+  </div>
+</div>

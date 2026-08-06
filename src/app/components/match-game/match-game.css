@@ -1,0 +1,39 @@
+.match-page {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  align-items: flex-start;
+}
+
+.standings-panel {
+  width: 220px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.standings-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}
+
+.standing-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 13px;
+}
+.standing-row:last-child { border-bottom: none; }
+.standing-row.local { color: var(--color-primary); font-weight: 600; }
+.standing-row.out { opacity: 0.45; }
+
+.standing-rank { width: 16px; color: var(--color-text-muted); }
+.standing-name { flex: 1; }
+.standing-score { font-variant-numeric: tabular-nums; }
+.standing-tag { font-size: 10px; color: var(--color-primary); }

@@ -1,0 +1,173 @@
+<div class="dashboard-layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">Dino Runner</div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item" [class.active]="activeSection === 'dashboard'" (click)="showSection('dashboard')">Dashboard</a>
+      <a class="nav-item" [class.active]="activeSection === 'profile'" (click)="showSection('profile')">Profile</a>
+      <a class="nav-item disabled">Leaderboard</a>
+      <a class="nav-item disabled">History</a>
+      <a class="nav-item disabled">Rankings</a>
+      <a class="nav-item" [class.active]="activeSection === 'settings'" (click)="showSection('settings')">Settings</a>
+      <button class="nav-item btn-ghost full-width" type="button" (click)="onLogout()">Log out</button>
+    </nav>
+
+    <div class="new-game-section">
+      <p class="section-label">New Game</p>
+      <button class="btn-success full-width" (click)="onSoloRun()">Solo Run</button>
+      <button class="btn-primary full-width" (click)="onCreateMatch()" [disabled]="isConnecting">
+        {{ isConnecting ? 'Connecting...' : 'Create Match' }}
+      </button>
+
+      <div class="join-row">
+        <input type="text" placeholder="Match code" [(ngModel)]="joinCode" />
+        <button class="btn-ghost" (click)="onJoinMatch()">Join</button>
+      </div>
+
+      @if (connectError) {
+        <p class="error-text">{{ connectError }}</p>
+      }
+    </div>
+  </aside>
+
+  <main class="dashboard-main">
+    <div class="main-topbar">
+      <h1>Your Progress</h1>
+      <div class="topbar-icons">
+        <button class="icon-btn" (click)="onNotificationsClick()">
+          🔔
+          @if (unreadCount > 0) {
+            <span class="badge">{{ unreadCount }}</span>
+          }
+        </button>
+        <span class="username-pill">{{ username }}</span>
+      </div>
+    </div>
+
+    @if (activeSection === 'dashboard') {
+      <div class="dashboard-hero">
+        <div>
+          <p class="eyebrow">Welcome back</p>
+          <h2>Keep your run streak alive.</h2>
+          <p class="hero-copy">Your dashboard is ready for your next race, challenge, and leaderboard climb.</p>
+        </div>
+      </div>
+    }
+
+    @if (activeSection === 'profile') {
+      <section class="profile-section">
+        <div class="section-heading">
+          <div>
+            <h2>Profile</h2>
+            <p>Update your identity, bio, and avatar in one place.</p>
+          </div>
+          <div class="section-actions">
+            @if (!isProfileEditing) {
+              <button class="btn-ghost" type="button" (click)="toggleProfileEdit()">Edit profile</button>
+            } @else {
+              <button class="btn-ghost" type="button" (click)="cancelProfileEdit()">Cancel</button>
+              <button class="btn-primary" type="button" (click)="saveProfile()">Save profile</button>
+            }
+          </div>
+        </div>
+
+        <div class="profile-card">
+          <div class="profile-avatar-block">
+            <img [src]="profileImagePreview" alt="Profile avatar" class="profile-avatar" />
+            @if (isProfileEditing) {
+              <label class="upload-btn">
+                <span>Upload image</span>
+                <input type="file" accept="image/*" (change)="onProfileImageSelected($event)" />
+              </label>
+            }
+          </div>
+
+          <div class="profile-fields">
+            @if (isProfileEditing) {
+              <div class="field-group">
+                <label>Username</label>
+                <input type="text" [(ngModel)]="editableProfile.username" />
+              </div>
+              <div class="field-group">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="editableProfile.email" />
+              </div>
+              <div class="field-group">
+                <label>Membership</label>
+                <input type="text" [(ngModel)]="editableProfile.membership" />
+              </div>
+              <div class="field-group">
+                <label>About</label>
+                <textarea rows="4" [(ngModel)]="editableProfile.bio"></textarea>
+              </div>
+            } @else {
+              <div class="profile-row">
+                <label>Username</label>
+                <span>{{ username }}</span>
+              </div>
+              <div class="profile-row">
+                <label>Email</label>
+                <span>{{ profileEmail }}</span>
+              </div>
+              <div class="profile-row">
+                <label>Membership</label>
+                <span>{{ membership }}</span>
+              </div>
+              <div class="profile-row bio-row">
+                <label>About</label>
+                <span>{{ profileBio }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (profileSavedMessage) {
+          <p class="success-text">{{ profileSavedMessage }}</p>
+        }
+      </section>
+    }
+
+    @if (activeSection === 'settings') {
+      <section class="settings-section">
+        <div class="section-heading">
+          <div>
+            <h2>Settings</h2>
+            <p>Control your preferences and game experience.</p>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-row">
+            <div>
+              <h3>Notifications</h3>
+              <p>Receive updates about multiplayer invites and challenges.</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" [(ngModel)]="notificationsEnabled" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <h3>Theme</h3>
+              <p>Switch between a bright and a darker interface.</p>
+            </div>
+            <select [ngModel]="preferredTheme" (ngModelChange)="onThemeChange($event)">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="section-actions">
+          <button class="btn-primary" type="button" (click)="saveSettings()">Save Settings</button>
+        </div>
+
+        @if (settingsSavedMessage) {
+          <p class="success-text">{{ settingsSavedMessage }}</p>
+        }
+      </section>
+    }
+  </main>
+</div>

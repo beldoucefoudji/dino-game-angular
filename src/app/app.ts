@@ -1,12 +1,20 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ThemeService } from './services/theme';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrls: ['./app.css']
 })
-export class App {
-  protected readonly title = signal('dino-game-angular');
+export class App implements OnInit {
+  protected title = 'dino-game-angular';
+
+  constructor(private themeService: ThemeService) {}
+
+  ngOnInit(): void {
+    this.themeService.initializeTheme();
+  }
 }
