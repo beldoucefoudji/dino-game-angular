@@ -298,6 +298,92 @@
   background: linear-gradient(135deg, rgba(68, 179, 163, 0.16), rgba(181, 80, 46, 0.12));
 }
 
+@media (max-width: 900px) {
+  .navbar {
+    padding: 20px 24px;
+    flex-wrap: wrap;
+  }
+
+  .nav-links {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 16px 24px 48px;
+  }
+
+  .arena,
+  .about-section,
+  .features {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .arena-grid,
+  .about-section {
+    grid-template-columns: 1fr;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 16px;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .nav-links,
+  .nav-icons {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .hero,
+  .arena,
+  .about-section,
+  .features {
+    padding: 16px;
+  }
+
+  .hero-text h1 {
+    font-size: clamp(28px, 7vw, 36px);
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .hero-actions button {
+    width: 100%;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-copy,
+  .about-card,
+  .card,
+  .feature-card {
+    padding: 18px;
+  }
+
+  .leaderboard-list li {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
 .feature-art img {
   width: 100%;
   max-height: 130px;

@@ -37,3 +37,13 @@
 .standing-name { flex: 1; }
 .standing-score { font-variant-numeric: tabular-nums; }
 .standing-tag { font-size: 10px; color: var(--color-primary); }
+
+@media (max-width: 900px) {
+  .match-page {
+    flex-direction: column;
+  }
+
+  .standings-panel {
+    width: 100%;
+  }
+}

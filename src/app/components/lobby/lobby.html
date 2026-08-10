@@ -69,10 +69,18 @@
       </div>
 
       <div class="lobby-code-card">
-        <p class="panel-title">Lobby code</p>
-        <div class="lobby-code">{{ matchId || 'Waiting...' }}</div>
-        <button class="btn-ghost full-width" (click)="copyMatchId()">Copy invite code</button>
-      </div>
+  <p class="panel-title">Lobby code</p>
+  <div class="lobby-code">{{ matchId || 'Waiting...' }}</div>
+  <button class="btn-ghost full-width" (click)="copyMatchId()">Copy invite code</button>
+
+  <div class="invite-row">
+    <input type="text" placeholder="Friend's User ID" [(ngModel)]="inviteUserId" />
+    <button class="btn-primary" (click)="sendInvite()">Invite</button>
+  </div>
+  @if (inviteStatus) {
+    <p class="invite-status">{{ inviteStatus }}</p>
+  }
+</div>
 
       <div class="chat-card">
         <p class="panel-title">Match briefing</p>

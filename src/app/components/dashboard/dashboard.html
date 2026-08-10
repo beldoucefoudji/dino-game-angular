@@ -1,5 +1,9 @@
 <div class="dashboard-layout">
-  <aside class="sidebar">
+  @if (isMobileMenuOpen) {
+    <div class="mobile-backdrop" (click)="closeMobileMenu()"></div>
+  }
+
+  <aside class="sidebar" [class.mobile-open]="isMobileMenuOpen">
     <div class="sidebar-logo">Dino Runner</div>
 
     <nav class="sidebar-nav">
@@ -32,6 +36,9 @@
 
   <main class="dashboard-main">
     <div class="main-topbar">
+      <button class="mobile-menu-toggle" type="button" (click)="toggleMobileMenu()" aria-label="Toggle navigation">
+        ☰
+      </button>
       <h1>Your Progress</h1>
       <div class="topbar-icons">
         <button class="icon-btn" (click)="onNotificationsClick()">

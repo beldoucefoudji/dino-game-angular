@@ -90,3 +90,40 @@
   font-size: 13px;
   padding-bottom: 24px;
 }
+
+@media (max-width: 900px) {
+  .mode-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 24px 48px;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .mode-hero {
+    padding: 24px 16px 20px;
+  }
+
+  .mode-grid {
+    grid-template-columns: 1fr;
+    padding: 0 16px 32px;
+  }
+
+  .mode-card {
+    padding: 22px 18px;
+  }
+
+  .join-input-row {
+    flex-direction: column;
+  }
+
+  .join-input-row button {
+    width: 100%;
+  }
+}

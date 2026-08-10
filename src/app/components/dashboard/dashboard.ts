@@ -18,6 +18,7 @@ export class Dashboard implements OnInit {
   unreadCount = 0;
   username = 'Player';
   activeSection: 'dashboard' | 'profile' | 'settings' = 'dashboard';
+  isMobileMenuOpen = false;
 
   profileEmail = 'player@example.com';
   profileBio = 'Loves hitting new top speeds and collecting dino badges.';
@@ -42,16 +43,21 @@ export class Dashboard implements OnInit {
     private themeService: ThemeService
   ) {}
 
-  ngOnInit() {
+ async ngOnInit() {
     if (!this.nakama.isAuthenticated()) {
       this.router.navigate(['/auth']);
       return;
     }
 
-    this.loadSettings();
-    this.syncProfileFromService();
-  }
+    const pending = await this.nakama.fetchPendingNotifications();
+    this.unreadCount = pending.length;
 
+    this.nakama.onIncomingNotification((notification) => {
+      this.unreadCount += 1;
+      console.log('New invite received:', notification.content);
+      // notification.content.match_id is available here for a "Join" action later
+    });
+  }
   private syncProfileFromService() {
     const profile = this.nakama.getProfile();
     this.username = profile.username;
@@ -74,6 +80,14 @@ export class Dashboard implements OnInit {
 
     const storedNotifications = localStorage.getItem('dino-notifications');
     this.notificationsEnabled = storedNotifications !== 'false';
+  }
+
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu() {
+    this.isMobileMenuOpen = false;
   }
 
   onSoloRun() {
@@ -124,6 +138,7 @@ export class Dashboard implements OnInit {
   showSection(section: 'dashboard' | 'profile' | 'settings') {
     this.activeSection = section;
     this.settingsSavedMessage = '';
+    this.closeMobileMenu();
     if (section === 'profile') {
       this.syncProfileFromService();
     }

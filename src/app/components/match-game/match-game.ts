@@ -17,6 +17,7 @@ interface RaceDino {
   score: number;
   freezeUntil: number;
   protectedUntil: number;
+  color: string;
 }
 
 interface StandingEntry {
@@ -112,7 +113,8 @@ export class MatchGame implements AfterViewInit, OnDestroy {
       lives: this.startingLives,
       score: 0,
       freezeUntil: 0,
-      protectedUntil: 0
+      protectedUntil: 0,
+      color: userId === myUserId ? this.nakama.getSelectedColor() : '#1D9E75'
     }));
 
     this.laneHeight = canvas.height / Math.max(this.dinos.length, 1);
@@ -130,6 +132,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
         dino.isDucking = payload.isDucking;
         dino.frameIndex = payload.frameIndex;
         dino.score = payload.score;
+        dino.color = payload.color ?? dino.color;
       } else if (matchData.op_code === 3) {
         dino.eliminated = true;
       } else if (matchData.op_code === 4) {
@@ -285,12 +288,14 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
     if (timestamp - this.lastBroadcast > 50) {
       this.lastBroadcast = timestamp;
+      me.color = this.nakama.getSelectedColor();
       this.nakama.sendPosition(this.matchId, {
         y: me.y,
         isJumping: me.isJumping,
         isDucking: me.isDucking,
         frameIndex: me.frameIndex,
-        score: me.score
+        score: me.score,
+        color: me.color
       });
     }
   }
@@ -344,7 +349,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
       else if (dino.isDucking) sx = dino.frameIndex === 1 ? 4 * 64 : 5 * 64;
       else sx = dino.frameIndex * 64;
 
-      this.ctx.drawImage(this.dinoSprite, sx, 0, 64, 64, 50, dinoDrawY, 64, dinoHeight);
+      this.drawTintedDinoSprite(sx, dinoDrawY, dinoHeight, dino.color);
 
       if (this.obstacleType === 'cactus') {
         this.ctx.fillStyle = '#333';
@@ -356,5 +361,27 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
       this.ctx.globalAlpha = 1;
     }
+  }
+
+  private drawTintedDinoSprite(sx: number, dinoDrawY: number, dinoHeight: number, color: string) {
+    const spriteWidth = 64;
+    const spriteHeight = 64;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = spriteWidth;
+    tempCanvas.height = spriteHeight;
+
+    const tempCtx = tempCanvas.getContext('2d');
+    if (!tempCtx) {
+      this.ctx.drawImage(this.dinoSprite, sx, 0, spriteWidth, spriteHeight, 50, dinoDrawY, spriteWidth, dinoHeight);
+      return;
+    }
+
+    tempCtx.drawImage(this.dinoSprite, sx, 0, spriteWidth, spriteHeight, 0, 0, spriteWidth, spriteHeight);
+    tempCtx.globalCompositeOperation = 'source-atop';
+    tempCtx.fillStyle = color;
+    tempCtx.fillRect(0, 0, spriteWidth, spriteHeight);
+    tempCtx.globalCompositeOperation = 'source-over';
+
+    this.ctx.drawImage(tempCanvas, 50, dinoDrawY, spriteWidth, dinoHeight);
   }
 }

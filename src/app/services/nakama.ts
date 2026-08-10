@@ -23,6 +23,7 @@ export class NakamaService {
     membership: 'Rookie Runner',
     avatar: '/dino.avif'
   };
+  private selectedColor = '#1D9E75';
 
   constructor() {
     this.client = new Client('defaultkey', '127.0.0.1', '7350', false);
@@ -52,6 +53,7 @@ export class NakamaService {
       membership: 'Rookie Runner',
       avatar: '/dino.avif'
     };
+    this.selectedColor = '#1D9E75';
   }
 
   updateProfile(profile: Partial<UserProfile>): void {
@@ -60,6 +62,14 @@ export class NakamaService {
 
   getProfile(): UserProfile {
     return { ...this.profile };
+  }
+
+  setSelectedColor(color: string): void {
+    this.selectedColor = color;
+  }
+
+  getSelectedColor(): string {
+    return this.selectedColor;
   }
 
  async connectSocket(): Promise<void> {
@@ -125,5 +135,21 @@ export class NakamaService {
   sendHit(matchId: string, lives: number) {
     if (!this.socket) return;
     this.socket.sendMatchState(matchId, 4, JSON.stringify({ lives }));
+  }
+
+  async sendMatchInvite(targetUserId: string, matchId: string): Promise<void> {
+    if (!this.session) throw new Error('Not authenticated.');
+    await this.client.rpc(this.session, 'send_match_invite', { target_user_id: targetUserId, match_id: matchId });
+  }
+
+  onIncomingNotification(callback: (notification: any) => void) {
+    if (!this.socket) return;
+    this.socket.onnotification = callback;
+  }
+
+  async fetchPendingNotifications(): Promise<any[]> {
+    if (!this.session) return [];
+    const result = await this.client.listNotifications(this.session, 10);
+    return result.notifications ?? [];
   }
 }

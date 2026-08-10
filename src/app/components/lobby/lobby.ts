@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NakamaService } from '../../services/nakama';
+import { FormsModule } from '@angular/forms';
 
 interface LobbyPlayer {
   userId: string;
@@ -29,6 +30,7 @@ export class Lobby implements OnInit, OnDestroy {
 
   async ngOnInit() {
     this.matchId = this.route.snapshot.paramMap.get('matchId') ?? '';
+    this.selectedColor = this.nakama.getSelectedColor();
 
     const socket = this.nakama.getSocket();
     if (!socket) {
@@ -99,5 +101,21 @@ export class Lobby implements OnInit, OnDestroy {
 
   selectColor(color: string) {
     this.selectedColor = color;
+    this.nakama.setSelectedColor(color);
+  }
+
+  //
+  inviteUserId = '';
+  inviteStatus = '';
+
+  async sendInvite() {
+    if (!this.inviteUserId.trim()) return;
+    try {
+      await this.nakama.sendMatchInvite(this.inviteUserId.trim(), this.matchId);
+      this.inviteStatus = 'Invite sent!';
+    } catch (error) {
+      console.error('Invite failed:', error);
+      this.inviteStatus = 'Could not send invite — check the User ID.';
+    }
   }
 }

@@ -1,16 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Nakama } from './nakama';
+import { NakamaService } from './nakama';
 
-describe('Nakama', () => {
-  let service: Nakama;
+describe('NakamaService', () => {
+  let service: NakamaService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Nakama);
+    service = TestBed.inject(NakamaService);
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  it('should persist the selected dino color', () => {
+    service.setSelectedColor('#5588cc');
+
+    expect(service.getSelectedColor()).toBe('#5588cc');
   });
 });
