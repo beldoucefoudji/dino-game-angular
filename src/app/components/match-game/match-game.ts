@@ -1,6 +1,8 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NakamaService } from '../../services/nakama';
+import { LanguageService } from '../../services/language';
+import { SoundService } from '../../services/sound';
 
 interface RaceDino {
   userId: string;
@@ -17,7 +19,6 @@ interface RaceDino {
   score: number;
   freezeUntil: number;
   protectedUntil: number;
-  color: string;
 }
 
 interface StandingEntry {
@@ -39,6 +40,8 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
   private ctx!: CanvasRenderingContext2D;
   private dinoSprite = new Image();
+  private cactusSprite = new Image();
+  private birdSprite = new Image();
   private animationFrameId = 0;
   private matchId = '';
 
@@ -54,38 +57,46 @@ export class MatchGame implements AfterViewInit, OnDestroy {
   private readonly invincibleDurationMs = 2000;
 
   private rng: () => number = Math.random;
-  private obstacleX = 800;
+  private obstacleX = 1200;
   private obstacleType: 'cactus' | 'bird' = 'cactus';
-  private readonly baseObstacleSpeed = 4;
+  private readonly baseObstacleSpeed = 4.5;
 
   private frameTimer = 0;
   private readonly frameDuration = 150;
   private lastTimestamp = 0;
   private lastBroadcast = 0;
   private lastStandingsUpdate = 0;
-  private readonly standingsUpdateInterval = 300; // ms — how often the HTML panel refreshes
+  private readonly standingsUpdateInterval = 300;
 
   private matchStartTime = 0;
   private readonly matchDurationMs = 180000;
   private readonly speedTierMs = 30000;
   isSuddenDeath = false;
   displaySecondsLeft = 180;
-
-  // public, Angular-tracked property for the HTML standings panel
+  showStandings = true;
   standings: StandingEntry[] = [];
+
+  private readonly SW = 100;
+  private readonly SH = 90;
+  private readonly HIT_MARGIN = 14;
+  private readonly OBS_MARGIN = 4;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private nakama: NakamaService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    public language: LanguageService,
+    public sound: SoundService
   ) {}
 
   async ngAfterViewInit() {
     this.matchId = this.route.snapshot.paramMap.get('matchId') ?? '';
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
-    this.dinoSprite.src = '/dino-sprite.png';
+    this.dinoSprite.src = '/dino-pixel-sprite-v2.png';
+    this.cactusSprite.src = '/cactus-pixel.png';
+    this.birdSprite.src = '/bird-pixel.png';
 
     this.rng = this.seededRandom(this.nakama.raceSeed);
 
@@ -102,19 +113,9 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     this.dinos = sortedIds.map((userId, index) => ({
       userId,
       username: match.presences?.find(p => p.user_id === userId)?.username ?? 'Player',
-      lane: index,
-      y: 0,
-      velocityY: 0,
-      isJumping: false,
-      isDucking: false,
-      frameIndex: 1,
-      eliminated: false,
-      isLocal: userId === myUserId,
-      lives: this.startingLives,
-      score: 0,
-      freezeUntil: 0,
-      protectedUntil: 0,
-      color: userId === myUserId ? this.nakama.getSelectedColor() : '#1D9E75'
+      lane: index, y: 0, velocityY: 0, isJumping: false, isDucking: false, frameIndex: 1,
+      eliminated: false, isLocal: userId === myUserId, lives: this.startingLives, score: 0,
+      freezeUntil: 0, protectedUntil: 0
     }));
 
     this.laneHeight = canvas.height / Math.max(this.dinos.length, 1);
@@ -123,16 +124,10 @@ export class MatchGame implements AfterViewInit, OnDestroy {
       const senderId = matchData.presence?.user_id;
       const dino = this.dinos.find(d => d.userId === senderId);
       if (!dino || dino.isLocal) return;
-
       const payload = JSON.parse(new TextDecoder().decode(matchData.data));
-
       if (matchData.op_code === 2) {
-        dino.y = payload.y;
-        dino.isJumping = payload.isJumping;
-        dino.isDucking = payload.isDucking;
-        dino.frameIndex = payload.frameIndex;
-        dino.score = payload.score;
-        dino.color = payload.color ?? dino.color;
+        dino.y = payload.y; dino.isJumping = payload.isJumping; dino.isDucking = payload.isDucking;
+        dino.frameIndex = payload.frameIndex; dino.score = payload.score;
       } else if (matchData.op_code === 3) {
         dino.eliminated = true;
       } else if (matchData.op_code === 4) {
@@ -144,7 +139,6 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
-
     this.matchStartTime = performance.now();
 
     this.ngZone.runOutsideAngular(() => {
@@ -160,6 +154,13 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     if (socket) socket.onmatchdata = () => {};
   }
 
+  onExit() { this.router.navigate(['/dashboard']); }
+
+  pressJump() { this.keys['ArrowUp'] = true; }
+  releaseJump() { this.keys['ArrowUp'] = false; }
+  pressDuck() { this.keys['ArrowDown'] = true; }
+  releaseDuck() { this.keys['ArrowDown'] = false; }
+
   private seededRandom(seed: number): () => number {
     let t = seed;
     return () => {
@@ -172,11 +173,9 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
   private onKeyDown = (e: KeyboardEvent) => {
     this.keys[e.code] = true;
-    if (e.code === 'Space') e.preventDefault();
+    if (e.code === 'ArrowUp' || e.code === 'ArrowDown') e.preventDefault();
   };
-  private onKeyUp = (e: KeyboardEvent) => {
-    this.keys[e.code] = false;
-  };
+  private onKeyUp = (e: KeyboardEvent) => { this.keys[e.code] = false; };
 
   private gameLoop = (timestamp: number) => {
     this.animationFrameId = requestAnimationFrame(this.gameLoop);
@@ -184,41 +183,23 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     this.lastTimestamp = timestamp;
     this.update(deltaTime, timestamp);
     this.draw(timestamp);
-
     if (timestamp - this.lastStandingsUpdate > this.standingsUpdateInterval) {
       this.lastStandingsUpdate = timestamp;
       this.refreshStandings();
     }
   };
 
-  // Steps back INTO Angular's zone just for this cheap update,
-  // so the HTML standings panel actually re-renders.
   private refreshStandings() {
     const snapshot: StandingEntry[] = this.dinos
-      .map(d => ({
-        userId: d.userId,
-        username: d.username,
-        score: Math.floor(d.score),
-        eliminated: d.eliminated,
-        isLocal: d.isLocal
-      }))
-      .sort((a, b) => {
-        if (a.eliminated !== b.eliminated) return a.eliminated ? 1 : -1; // alive players first
-        return b.score - a.score; // higher score = further ahead
-      });
-
-    this.ngZone.run(() => {
-      this.standings = snapshot;
-    });
+      .map(d => ({ userId: d.userId, username: d.username, score: Math.floor(d.score), eliminated: d.eliminated, isLocal: d.isLocal }))
+      .sort((a, b) => { if (a.eliminated !== b.eliminated) return a.eliminated ? 1 : -1; return b.score - a.score; });
+    this.ngZone.run(() => { this.standings = snapshot; });
   }
 
   private currentSpeedMultiplier(elapsedMs: number): number {
     const tier = Math.min(Math.floor(elapsedMs / this.speedTierMs), 6);
     let multiplier = Math.pow(1.15, tier);
-    if (elapsedMs >= this.matchDurationMs) {
-      this.isSuddenDeath = true;
-      multiplier *= 2;
-    }
+    if (elapsedMs >= this.matchDurationMs) { this.isSuddenDeath = true; multiplier *= 2; }
     return multiplier;
   }
 
@@ -228,55 +209,60 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
     const elapsedMs = timestamp - this.matchStartTime;
     this.displaySecondsLeft = Math.max(0, Math.ceil((this.matchDurationMs - elapsedMs) / 1000));
-    const speedMultiplier = this.currentSpeedMultiplier(elapsedMs);
-    const effectiveSpeed = this.baseObstacleSpeed * speedMultiplier;
+    const effectiveSpeed = this.baseObstacleSpeed * this.currentSpeedMultiplier(elapsedMs);
 
     this.obstacleX -= effectiveSpeed;
     if (this.obstacleX < -50) {
-      this.obstacleX = 960;
+      this.obstacleX = 1200;
       this.obstacleType = this.rng() < 0.5 ? 'cactus' : 'bird';
     }
 
     if (!me.eliminated) {
-      me.score += deltaTime * 0.01; // same "survival time" formula as Solo mode
-
+      me.score += deltaTime * 0.01;
       const isFrozen = timestamp < me.freezeUntil;
       const isProtected = timestamp < me.protectedUntil;
 
       if (!isFrozen) {
-        if (this.keys['Space'] && !me.isJumping) {
-          me.velocityY = this.jumpStrength;
-          me.isJumping = true;
-        }
+        if (this.keys['ArrowUp'] && !me.isJumping) { me.velocityY = this.jumpStrength; me.isJumping = true; this.sound.play(500, 0.05); }
         me.isDucking = !!this.keys['ArrowDown'] && !me.isJumping;
-
         me.velocityY += this.gravity;
         me.y = Math.min(0, me.y + me.velocityY);
-        if (me.y >= 0) {
-          me.y = 0;
-          me.velocityY = 0;
-          me.isJumping = false;
-        }
+        if (me.y >= 0) { me.y = 0; me.velocityY = 0; me.isJumping = false; }
 
         this.frameTimer += deltaTime;
-        if (this.frameTimer >= this.frameDuration) {
-          this.frameTimer = 0;
-          me.frameIndex = me.frameIndex === 1 ? 2 : 1;
-        }
+        if (this.frameTimer >= this.frameDuration) { this.frameTimer = 0; me.frameIndex = me.frameIndex === 1 ? 2 : 1; }
       }
 
       if (!isProtected) {
         const dinoHeight = me.isDucking ? 40 : 64;
         const dinoDrawY = me.isDucking ? me.y + (64 - dinoHeight) : me.y;
-        const obsY = this.obstacleType === 'cactus' ? 24 : -6;
-        const obsW = this.obstacleType === 'cactus' ? 20 : 34;
-        const obsH = this.obstacleType === 'cactus' ? 40 : 20;
+        const obsY = this.obstacleType === 'cactus' ? 14 : -10;
+        const obsW = this.obstacleType === 'cactus' ? 22 : 24;
+        const obsH = this.obstacleType === 'cactus' ? 40 : 14;
 
-        if (this.isColliding(50, dinoDrawY, 64, dinoHeight, this.obstacleX, obsY, obsW, obsH)) {
+        const dx = 50 + this.HIT_MARGIN, dy = dinoDrawY + this.HIT_MARGIN;
+        const dw = 64 - this.HIT_MARGIN * 2, dh = dinoHeight - this.HIT_MARGIN * 2;
+        const ox = this.obstacleX + this.OBS_MARGIN, oy = obsY + this.OBS_MARGIN;
+        const ow = obsW - this.OBS_MARGIN * 2, oh = obsH - this.OBS_MARGIN * 2;
+
+        if (this.isColliding(dx, dy, dw, dh, ox, oy, ow, oh)) {
+          this.sound.play(220, 0.15);
           me.lives -= 1;
           if (me.lives <= 0) {
             me.eliminated = true;
+            // for result
+            this.nakama.lastResult = {
+            mode: 'multiplayer',
+            score: me.score,
+            highScore: me.score,
+             standings: this.dinos.map(d => ({ username: d.username, score: d.score, isLocal: d.isLocal }))
+            };
+            setTimeout(() => this.router.navigate(['/results']), 1500);
+
             this.nakama.sendElimination(this.matchId);
+            this.nakama.submitScore('dino_multiplayer', me.score);
+            const stillAlive = this.dinos.filter(d => !d.eliminated).length;
+            this.nakama.awardCoins(me.score, me.lives, this.dinos.length, stillAlive === 0);
           } else {
             me.freezeUntil = timestamp + this.freezeDurationMs;
             me.protectedUntil = timestamp + this.freezeDurationMs + this.invincibleDurationMs;
@@ -288,15 +274,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
     if (timestamp - this.lastBroadcast > 50) {
       this.lastBroadcast = timestamp;
-      me.color = this.nakama.getSelectedColor();
-      this.nakama.sendPosition(this.matchId, {
-        y: me.y,
-        isJumping: me.isJumping,
-        isDucking: me.isDucking,
-        frameIndex: me.frameIndex,
-        score: me.score,
-        color: me.color
-      });
+      this.nakama.sendPosition(this.matchId, { y: me.y, isJumping: me.isJumping, isDucking: me.isDucking, frameIndex: me.frameIndex, score: me.score });
     }
   }
 
@@ -306,82 +284,42 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
   private draw(timestamp: number) {
     const canvas = this.canvasRef.nativeElement;
-    this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    this.ctx.fillStyle = this.isSuddenDeath ? '#b5502e' : '#535353';
-    this.ctx.font = 'bold 14px sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText(
-      this.isSuddenDeath ? 'SUDDEN DEATH' : `${this.displaySecondsLeft}s`,
-      canvas.width / 2, 16
-    );
+    const sky = this.ctx.createLinearGradient(0, 0, 0, canvas.height);
+    sky.addColorStop(0, '#1c1a40'); sky.addColorStop(1, '#5a3a55');
+    this.ctx.fillStyle = sky;
+    this.ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (const dino of this.dinos) {
       const laneTop = dino.lane * this.laneHeight;
       const groundY = laneTop + this.laneHeight - this.groundOffset;
 
-      this.ctx.strokeStyle = dino.isLocal ? '#b5502e' : '#ccc';
+      this.ctx.strokeStyle = dino.isLocal ? '#4ade80' : 'rgba(255,255,255,0.15)';
       this.ctx.lineWidth = dino.isLocal ? 2 : 1;
       this.ctx.strokeRect(0, laneTop, canvas.width, this.laneHeight);
 
-      this.ctx.fillStyle = '#8a7b72';
-      this.ctx.font = '12px sans-serif';
+      this.ctx.fillStyle = '#eef2f6';
+      this.ctx.font = '11px sans-serif';
       this.ctx.textAlign = 'left';
-      const livesDisplay = '♥'.repeat(Math.max(dino.lives, 0));
-      this.ctx.fillText(
-        `${dino.username}${dino.isLocal ? ' (you)' : ''}  ${livesDisplay}  ·  ${Math.floor(dino.score)} pts`,
-        10, laneTop + 16
-      );
+      const hearts = '❤'.repeat(Math.max(dino.lives, 0));
+      this.ctx.fillText(`${dino.username}${dino.isLocal ? ' (you)' : ''}  ${hearts}  ${Math.floor(dino.score)}pt`, 10, laneTop + 15);
 
       const isFrozen = timestamp < dino.freezeUntil;
       const isProtected = timestamp < dino.protectedUntil;
-
-      if (dino.eliminated) {
-        this.ctx.globalAlpha = 0.3;
-      } else if (isProtected && !isFrozen) {
-        this.ctx.globalAlpha = Math.floor(timestamp / 100) % 2 === 0 ? 1 : 0.3;
-      }
+      if (dino.eliminated) this.ctx.globalAlpha = 0.3;
+      else if (isProtected && !isFrozen) this.ctx.globalAlpha = Math.floor(timestamp / 100) % 2 === 0 ? 1 : 0.35;
 
       const dinoHeight = dino.isDucking ? 40 : 64;
       const dinoDrawY = groundY + (dino.isDucking ? (64 - dinoHeight) : dino.y);
       let sx: number;
-      if (dino.isJumping) sx = 3 * 64;
-      else if (dino.isDucking) sx = dino.frameIndex === 1 ? 4 * 64 : 5 * 64;
-      else sx = dino.frameIndex * 64;
+      if (dino.isJumping) sx = 3 * this.SW;
+      else if (dino.isDucking) sx = dino.frameIndex === 1 ? 4 * this.SW : 5 * this.SW;
+      else sx = dino.frameIndex * this.SW;
 
-      this.drawTintedDinoSprite(sx, dinoDrawY, dinoHeight, dino.color);
+      if (this.obstacleType === 'cactus') this.ctx.drawImage(this.cactusSprite, this.obstacleX, groundY + 14, 22, 40);
+      else this.ctx.drawImage(this.birdSprite, this.obstacleX, groundY - 10, 24, 14);
 
-      if (this.obstacleType === 'cactus') {
-        this.ctx.fillStyle = '#333';
-        this.ctx.fillRect(this.obstacleX, groundY + 24, 20, 40);
-      } else {
-        this.ctx.fillStyle = '#5588cc';
-        this.ctx.fillRect(this.obstacleX, groundY - 6, 34, 20);
-      }
-
+      this.ctx.drawImage(this.dinoSprite, sx, 0, this.SW, this.SH, 50, dinoDrawY, 64, dinoHeight);
       this.ctx.globalAlpha = 1;
     }
-  }
-
-  private drawTintedDinoSprite(sx: number, dinoDrawY: number, dinoHeight: number, color: string) {
-    const spriteWidth = 64;
-    const spriteHeight = 64;
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = spriteWidth;
-    tempCanvas.height = spriteHeight;
-
-    const tempCtx = tempCanvas.getContext('2d');
-    if (!tempCtx) {
-      this.ctx.drawImage(this.dinoSprite, sx, 0, spriteWidth, spriteHeight, 50, dinoDrawY, spriteWidth, dinoHeight);
-      return;
-    }
-
-    tempCtx.drawImage(this.dinoSprite, sx, 0, spriteWidth, spriteHeight, 0, 0, spriteWidth, spriteHeight);
-    tempCtx.globalCompositeOperation = 'source-atop';
-    tempCtx.fillStyle = color;
-    tempCtx.fillRect(0, 0, spriteWidth, spriteHeight);
-    tempCtx.globalCompositeOperation = 'source-over';
-
-    this.ctx.drawImage(tempCanvas, 50, dinoDrawY, spriteWidth, dinoHeight);
   }
 }

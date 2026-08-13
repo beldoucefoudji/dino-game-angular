@@ -1,16 +1,16 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { Location } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NakamaService } from '../../services/nakama';
 import { getDeviceId } from '../../services/device-id';
+import { LanguageService } from '../../services/language';
+import { SoundService } from '../../services/sound';
 
 @Component({
   selector: 'app-mode-select',
-  standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './mode-select.html',
-  styleUrls: ['./mode-select.css']
+  styleUrl: './mode-select.css'
 })
 export class ModeSelect {
   isConnecting = false;
@@ -18,34 +18,42 @@ export class ModeSelect {
   showJoinInput = false;
   joinCode = '';
 
+  private translations = {
+    en: {
+      heading: 'CHOOSE YOUR MODE', sub: 'Pick a mode to start your adventure',
+      solo: 'SOLO RUN', soloDesc: 'Run alone and beat your high score',
+      multi: 'MULTIPLAYER', multiDesc: 'Race against other real players',
+      join: 'Join with code', go: 'Go'
+    },
+    fr: {
+      heading: 'CHOISIS TON MODE', sub: 'Choisis un mode pour commencer',
+      solo: 'SOLO', soloDesc: 'Cours seul et bats ton meilleur score',
+      multi: 'MULTIJOUEUR', multiDesc: "Affronte d'autres joueurs réels",
+      join: 'Rejoindre avec un code', go: 'Aller'
+    }
+  };
+
   constructor(
     private router: Router,
-    private location: Location,
-    private nakama: NakamaService
+    private nakama: NakamaService,
+    public language: LanguageService,
+    public sound: SoundService
   ) {}
 
+  t(key: string): string {
+    return (this.translations as any)[this.language.lang()][key];
+  }
+
   playSolo() {
+    this.sound.play(500);
     this.router.navigate(['/solo-game']);
   }
 
-  private requireAuth(action: string): boolean {
-    if (this.nakama.isAuthenticated()) {
-      return true;
-    }
-
-    this.connectError = `Please sign up or log in to ${action}.`;
-    this.router.navigate(['/auth']);
-    return false;
-  }
-
   async createMatch() {
-    if (!this.requireAuth('create a match')) {
-      return;
-    }
     if (this.isConnecting) return;
+    this.sound.play(500);
     this.isConnecting = true;
     this.connectError = '';
-
     try {
       await this.ensureConnected();
       const matchId = await this.nakama.createMatch();
@@ -59,13 +67,10 @@ export class ModeSelect {
   }
 
   async joinMatch() {
-    if (!this.requireAuth('join a match')) {
-      return;
-    }
     if (!this.joinCode.trim()) return;
+    this.sound.play(500);
     this.isConnecting = true;
     this.connectError = '';
-
     try {
       await this.ensureConnected();
       const matchId = await this.nakama.joinMatch(this.joinCode.trim());
@@ -79,12 +84,10 @@ export class ModeSelect {
   }
 
   private async ensureConnected() {
-    const deviceId = getDeviceId();
-    await this.nakama.authenticate(deviceId);
-    await this.nakama.connectSocket();
-  }
-
-  goBack() {
-    this.location.back();
+    if (!this.nakama.isAuthenticated()) {
+      const deviceId = getDeviceId();
+      await this.nakama.authenticate(deviceId);
+    }
+    await this.nakama.ensureSocketConnected();
   }
 }

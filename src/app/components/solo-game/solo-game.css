@@ -1,0 +1,94 @@
+.game-page {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 40;
+}
+
+.canvas-wrap {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+canvas {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+.back-btn {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(15,20,32,0.6); border: 1px solid var(--color-border);
+  color: #fff; border-radius: 50%; width: 32px; height: 32px; font-size: 14px;
+  z-index: 5;
+}
+
+.top-left-icons {
+  position: absolute; top: 12px; left: 54px;
+  display: flex; gap: 6px; z-index: 5;
+}
+
+.player-card {
+  position: absolute; top: 52px; left: 54px;
+  background: rgba(15,20,32,0.7); border: 1px solid var(--color-border);
+  border-radius: 10px; padding: 6px 10px; display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: #fff; z-index: 5;
+}
+.avatar { font-size: 20px; }
+.player-name { margin: 0; font-weight: 700; }
+.hearts span { color: var(--color-danger); }
+.hearts span.dim { color: #444; }
+
+.score-panel {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(15,20,32,0.7); border: 1px solid var(--color-border);
+  border-radius: 10px; padding: 6px 18px; text-align: center; color: #fff; z-index: 5;
+}
+.score-label { font-size: 9px; letter-spacing: 0.1em; color: var(--color-text-muted); margin: 0; }
+.score-value { font-size: 20px; font-weight: 800; color: var(--color-gold); margin: 0; }
+.best-value { font-size: 9px; color: var(--color-text-muted); margin: 0; }
+
+.top-right { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; align-items: center; z-index: 5; }
+.coin-badge {
+  background: rgba(15,20,32,0.7); border: 1px solid var(--color-border);
+  border-radius: 20px; padding: 6px 12px; font-size: 12px; color: var(--color-gold); font-weight: 700;
+}
+.icon-btn.round { border-radius: 50%; width: 32px; height: 32px; padding: 0; background: rgba(15,20,32,0.7); border: 1px solid var(--color-border); color: #fff; font-size: 13px; }
+
+.speed-panel { position: absolute; top: 56px; right: 12px; text-align: right; z-index: 5; }
+.speed-label { font-size: 9px; color: var(--color-text-muted); margin: 0 0 3px; }
+.speed-bar { display: flex; gap: 3px; }
+.speed-seg { width: 14px; height: 6px; background: #333; border-radius: 3px; }
+.speed-seg.filled { background: var(--color-primary); }
+
+.distance-wrap { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); text-align: center; width: 60%; max-width: 320px; z-index: 5; }
+.distance-bar { position: relative; height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; }
+.distance-fill { height: 100%; background: var(--color-primary); border-radius: 4px; transition: width 0.2s linear; }
+.flag { position: absolute; right: -10px; top: -8px; font-size: 14px; }
+.distance-label {
+  display: inline-block; margin-top: 6px; font-size: 11px; color: #fff;
+  background: rgba(15,20,32,0.7); border: 1px solid var(--color-border); border-radius: 10px; padding: 2px 10px;
+}
+
+.touch-btn {
+  position: absolute; bottom: 16px; z-index: 5;
+  background: rgba(15,20,32,0.75); border: 2px solid var(--color-gold);
+  color: #fff; border-radius: 50%; width: 56px; height: 56px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+}
+.touch-btn span { font-size: 18px; }
+.touch-btn small { font-size: 8px; color: var(--color-gold); font-weight: 700; }
+.jump-btn { left: 16px; }
+.duck-btn { right: 16px; }
+
+@media (max-width: 700px) {
+  .player-card { font-size: 10px; padding: 4px 8px; top: 46px; }
+  .score-value { font-size: 15px; }
+  .distance-wrap { bottom: 80px; }
+}

@@ -1,0 +1,44 @@
+.results-page {
+  max-width: 420px;
+  margin: 60px auto;
+  padding: 24px;
+  text-align: center;
+}
+
+.banner {
+  display: inline-block;
+  background: var(--color-primary);
+  color: #0f1420;
+  font-weight: 800;
+  padding: 8px 20px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.solo-score { font-size: 42px; font-weight: 800; color: var(--color-gold); margin: 10px 0 0; }
+.solo-best { color: var(--color-text-muted); margin-bottom: 24px; }
+
+.finish-label { color: var(--color-text-muted); font-size: 13px; margin-bottom: 4px; }
+.rank-number { font-size: 48px; font-weight: 800; color: var(--color-gold); margin: 0 0 20px; }
+
+.standings-list {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 24px;
+}
+.standing-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px; font-size: 14px;
+}
+.standing-row.local { background: rgba(74, 222, 128, 0.12); font-weight: 700; }
+.medal { width: 24px; }
+.name { flex: 1; text-align: left; }
+.pts { color: var(--color-primary); font-weight: 700; }
+
+.actions { display: flex; flex-direction: column; gap: 10px; }
+
+@media (max-width: 500px) {
+  .results-page { margin: 30px auto; }
+}

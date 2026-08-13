@@ -1,43 +1,36 @@
-<nav class="navbar">
-  <button class="btn-back" (click)="goBack()">← Back</button>
-  <span class="logo">Dino Runner</span>
-  <span class="guest-badge">Guest</span>
-</nav>
-
-<section class="mode-hero">
-  <h1>Choose Your Path</h1>
-  <p>Race alone against the clock, or challenge others in real time.</p>
-</section>
-
-<section class="mode-grid">
-  <div class="mode-card" (click)="playSolo()">
-    <div class="mode-icon">◐</div>
-    <h3>Solo Run</h3>
-    <p>Practice freely, no account needed. Your best score stays on this device.</p>
+<div class="mode-page">
+  <a class="back-btn" routerLink="/">←</a>
+  <div class="lang-sound-row">
+    <button class="icon-btn" (click)="language.toggle()">{{ language.lang() === 'en' ? '🌐 EN' : '🌐 FR' }}</button>
+    <button class="icon-btn" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
   </div>
 
-  <div class="mode-card" (click)="createMatch()">
-    <div class="mode-icon">♦</div>
-    <h3>Create Match</h3>
-    <p>Start a new lobby and invite others with a shareable code.</p>
-    @if (isConnecting) {
-      <p class="mode-status">Connecting...</p>
-    }
+  <h1>🦕 {{ t('heading') }} 🦕</h1>
+  <p class="sub">{{ t('sub') }}</p>
+
+  <div class="mode-grid">
+    <div class="mode-card solo" (click)="playSolo()">
+      <img class="mode-image" src="/solo.avif" alt="Solo mode" />
+      <h3>{{ t('solo') }}</h3>
+      <p>{{ t('soloDesc') }}</p>
+    </div>
+
+    <div class="mode-card multi" (click)="createMatch()">
+      <img class="mode-image" src="/multi.avif" alt="Multiplayer mode" />
+      <h3>{{ t('multi') }}</h3>
+      <p>{{ t('multiDesc') }}</p>
+      @if (isConnecting) {
+        <p class="status">Connecting...</p>
+      }
+    </div>
   </div>
 
-  <div class="mode-card" (click)="showJoinInput = true">
-    <div class="mode-icon">◈</div>
-    <h3>Join Match</h3>
-    <p>Enter a code from a friend to jump straight into their lobby.</p>
-    @if (showJoinInput) {
-      <div class="join-input-row" (click)="$event.stopPropagation()">
-        <input type="text" placeholder="Match code" [(ngModel)]="joinCode" />
-        <button class="btn-primary" (click)="joinMatch()">Go</button>
-      </div>
-    }
+  <div class="join-block" (click)="$event.stopPropagation()">
+    <input type="text" [placeholder]="t('join')" [(ngModel)]="joinCode" />
+    <button class="btn-secondary" (click)="joinMatch()">{{ t('go') }}</button>
   </div>
-</section>
 
-@if (connectError) {
-  <p class="error-text">{{ connectError }}</p>
-}
+  @if (connectError) {
+    <p class="error-text">{{ connectError }}</p>
+  }
+</div>

@@ -1,146 +1,37 @@
 <nav class="navbar">
-  <span class="logo">Dino Runner</span>
-  <div class="nav-links">
-    <a href="#arena">Leaderboard</a>
-    <a href="#about">About</a>
-  </div>
+  <span class="logo">🦖 DINO RUNNER</span>
   <div class="nav-icons">
-    <button class="theme-toggle" type="button" (click)="toggleTheme()" [attr.aria-pressed]="isDarkMode">
-      {{ isDarkMode ? '☀️ Light' : '🌙 Dark' }}
-    </button>
-   @if (username) {
-  <span class="guest-badge">{{ username }}</span>
-} @else {
-  <a class="login-link" routerLink="/auth">Log in</a>
-}
+    <button class="icon-btn" (click)="language.toggle()">{{ language.lang() === 'en' ? '🌐 EN' : '🌐 FR' }}</button>
+    <button class="icon-btn" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
+    <span class="guest-badge">{{ username || 'Guest' }}</span>
   </div>
 </nav>
 
 <section class="hero">
   <div class="hero-text">
-    <p class="eyebrow">Online multiplayer</p>
-    <h1>Find your flow in the primitive world.</h1>
-    <p class="hero-desc">
-      A calm, competitive endless runner. Race up to six players in real time,
-      survive the shared course, and climb the leaderboard.
-    </p>
+    <h1 class="game-title">{{ t('title') }}</h1>
+    <p class="tagline">{{ t('tagline') }}</p>
     <div class="hero-actions">
-      <button class="btn-primary" (click)="onStartGame()">Start Game</button>
-      
-      <button class="btn-ghost" type="button" (click)="openGallery()">View Gallery</button>
+      <button class="btn-primary full-width" (click)="onStartGame()">{{ t('start') }}</button>
+      <button class="btn-secondary full-width" (click)="onLeaderboard()">{{ t('leaderboard') }}</button>
+      <button class="btn-ghost full-width" (click)="toggleHowToPlay()">{{ t('howTo') }}</button>
+      <a class="btn-ghost full-width login-link" routerLink="/auth">{{ t('login') }}</a>
     </div>
-  </div>
-  <div class="hero-image">
-   <img src="/g2.JPG" alt="Dino silhouette in a prehistoric landscape" />
   </div>
 </section>
 
-@if (isGalleryOpen) {
-  <div class="gallery-overlay" role="dialog" aria-modal="true" aria-label="Game gallery">
-    <div class="gallery-modal">
-      <button class="gallery-close" type="button" (click)="closeGallery()" aria-label="Close gallery">×</button>
-      <img [src]="selectedGalleryImage" alt="Selected gallery preview" class="gallery-main-image" />
-      <div class="gallery-thumbs">
-        @for (image of galleryImages; track image.src) {
-          <button
-            class="gallery-thumb"
-            type="button"
-            [class.active]="selectedGalleryImage === image.src"
-            (click)="selectGalleryImage(image)">
-            <img [src]="image.src" [alt]="image.alt" />
-          </button>
-        }
-      </div>
+@if (showHowToPlay) {
+  <div class="modal-overlay" (click)="toggleHowToPlay()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h2>{{ t('howToTitle') }}</h2>
+      <ul>
+        <li>{{ t('rule1') }}</li>
+        <li>{{ t('rule2') }}</li>
+        <li>{{ t('rule3') }}</li>
+        <li>{{ t('rule4') }}</li>
+        <li>{{ t('rule5') }}</li>
+      </ul>
+      <button class="btn-primary full-width" (click)="toggleHowToPlay()">{{ t('gotIt') }}</button>
     </div>
   </div>
 }
-
-<section class="about-section" id="about">
-  <div class="about-copy">
-    <p class="eyebrow">About the game</p>
-    <h2>Built for fast, fair, shared-race energy.</h2>
-    <p>
-      Dino Runner is an endless-runner experience designed around real-time competition.
-      Every session uses the same server-backed course, so players can race side-by-side
-      without any hidden advantage from local timing tricks.
-    </p>
-    <div class="about-points">
-      <div>
-        <strong>Shared course</strong>
-        <span>Everyone runs the same world state, in sync.</span>
-      </div>
-      <div>
-        <strong>Responsive controls</strong>
-        <span>Jump, recover, and outlast the field in one smooth flow.</span>
-      </div>
-      <div>
-        <strong>Trusted rankings</strong>
-        <span>Leaderboard scores are backed by the match system, not client-side rewrites.</span>
-      </div>
-    </div>
-  </div>
-  <div class="about-card">
-    <p class="card-label">How it feels</p>
-    <ul>
-      <li>Quick arcade sessions</li>
-      <li>Up to six racers per match</li>
-      <li>Short respawn windows and a fair pacing loop</li>
-    </ul>
-  </div>
-</section>
-
-<section class="features">
-  <h2>What makes it different</h2>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-art">
-        <img src="/dino.avif" alt="" />
-      </div>
-      <div class="feature-icon">◐</div>
-      <h3>Real-time races</h3>
-      <p>Up to six players run the exact same server-generated course, simultaneously, no lag advantage.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-art alt-art">
-        <img src="/dino.avif" alt="" />
-      </div>
-      <div class="feature-icon">♦</div>
-      <h3>Second chances</h3>
-      <p>Four lives per match, with a brief invincibility window on respawn — one mistake won't end your race.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-art glow-art">
-        <img src="/dino.avif" alt="" />
-      </div>
-      <div class="feature-icon">◈</div>
-      <h3>Fair by design</h3>
-      <p>Every hit, every obstacle, every reward is verified server-side. Nothing client-side can be faked.</p>
-    </div>
-  </div>
-</section>
-
-<section class="arena">
-  <h2>The Arena</h2>
-  <div class="arena-grid">
-    <div class="card leaderboard-card">
-      <div class="card-header">
-        <span>Global leaderboard</span>
-      </div>
-      <ul class="leaderboard-list">
-        @for (entry of topPlayers; track entry.rank) {
-          <li>
-            <span class="rank">{{ entry.rank }}</span>
-            <span class="name">{{ entry.name }}</span>
-            <span class="score">{{ entry.score }}</span>
-          </li>
-        }
-      </ul>
-    </div>
-
-    <div class="card personal-card">
-      <p class="card-label">Personal best</p>
-      <p class="personal-score">{{ personalBest }}</p>
-      <button class="btn-primary full-width" (click)="onStartGame()">Beat your best</button>
-    </div>
-  </div>
-</section>

@@ -1,17 +1,40 @@
-<div class="match-page">
-  <canvas #gameCanvas width="960" height="480"></canvas>
+<div class="game-page">
+  <div class="canvas-wrap">
+    <canvas #gameCanvas width="1100" height="500"></canvas>
 
-  <aside class="standings-panel">
-    <p class="standings-title">Standings</p>
-    @for (entry of standings; track entry.userId; let i = $index) {
-      <div class="standing-row" [class.local]="entry.isLocal" [class.out]="entry.eliminated">
-        <span class="standing-rank">{{ i + 1 }}</span>
-        <span class="standing-name">{{ entry.username }}{{ entry.isLocal ? ' (you)' : '' }}</span>
-        <span class="standing-score">{{ entry.score }}</span>
-        @if (entry.eliminated) {
-          <span class="standing-tag">Out</span>
+    <button class="back-btn" (click)="onExit()">←</button>
+
+    <div class="top-left-icons">
+      <button class="icon-btn round" (click)="language.toggle()">🌐</button>
+      <button class="icon-btn round" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
+    </div>
+
+    <div class="timer-panel">
+      <p class="timer-value" [class.danger]="isSuddenDeath">
+        {{ isSuddenDeath ? 'SUDDEN DEATH' : displaySecondsLeft + 's' }}
+      </p>
+    </div>
+
+    <button class="standings-toggle" (click)="showStandings = !showStandings">🏆</button>
+
+    @if (showStandings) {
+      <aside class="standings-panel">
+        <p class="standings-title">Standings</p>
+        @for (entry of standings; track entry.userId; let i = $index) {
+          <div class="standing-row" [class.local]="entry.isLocal" [class.out]="entry.eliminated">
+            <span class="standing-rank">{{ i + 1 }}</span>
+            <span class="standing-name">{{ entry.username }}{{ entry.isLocal ? ' (you)' : '' }}</span>
+            <span class="standing-score">{{ entry.score }}</span>
+          </div>
         }
-      </div>
+      </aside>
     }
-  </aside>
+
+    <button class="touch-btn jump-btn" (pointerdown)="pressJump()" (pointerup)="releaseJump()">
+      <span>⬆</span><small>JUMP</small>
+    </button>
+    <button class="touch-btn duck-btn" (pointerdown)="pressDuck()" (pointerup)="releaseDuck()">
+      <span>⬇</span><small>SLIDE</small>
+    </button>
+  </div>
 </div>

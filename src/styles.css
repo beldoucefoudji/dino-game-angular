@@ -1,36 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;700&display=swap');
-
 :root {
-  --color-bg: #fbeeea;
-  --color-bg-alt: #f5e4dd;
-  --color-primary: #b5502e;
-  --color-primary-hover: #96411f;
-  --color-success: #4f6b4a;
-  --color-success-hover: #3d5439;
-  --color-text: #2b2420;
-  --color-text-muted: #8a7b72;
-  --color-card: #ffffff;
-  --color-border: #ebded4;
+  --color-bg: #0f1420;
+  --color-bg-alt: #171d2e;
+  --color-card: #1b2338;
+  --color-border: #2a3450;
+  --color-primary: #4ade80;
+  --color-primary-hover: #3fc770;
+  --color-secondary: #4f9dff;
+  --color-secondary-hover: #3d87e6;
+  --color-gold: #ffcb45;
+  --color-danger: #ff5d6c;
+  --color-text: #eef2f6;
+  --color-text-muted: #8a96ac;
 
-  --font-heading: 'Orbitron', 'Trebuchet MS', sans-serif;
-  --font-body: 'Rajdhani', 'Segoe UI', sans-serif;
-}
-
-body[data-theme='dark'] {
-  --color-bg: #0f1722;
-  --color-bg-alt: #182133;
-  --color-primary: #8fd3ff;
-  --color-primary-hover: #69bdf8;
-  --color-success: #85d16f;
-  --color-success-hover: #61b253;
-  --color-text: #f3f7ff;
-  --color-text-muted: #9fb1cc;
-  --color-card: #162133;
-  --color-border: #2a3a55;
-}
-
-* {
-  box-sizing: border-box;
+  --font-heading: 'Baloo 2', sans-serif;
+  --font-body: 'Inter', sans-serif;
 }
 
 body {
@@ -38,22 +21,6 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
-  transition: background 160ms ease, color 160ms ease;
-  overflow-x: hidden;
-  min-height: 100vh;
-}
-
-img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
 }
 
 h1, h2, h3 {
@@ -63,42 +30,41 @@ h1, h2, h3 {
 }
 
 button {
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
   cursor: pointer;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   padding: 12px 24px;
-  min-height: 44px;
-}
-
-input,
-select,
-textarea {
-  min-height: 44px;
 }
 
 .btn-primary {
   background: var(--color-primary);
-  color: white;
+  color: #0f1420;
+  box-shadow: 0 4px 0 var(--color-primary-hover);
 }
+.btn-primary:active { box-shadow: 0 1px 0 var(--color-primary-hover); transform: translateY(3px); }
 
-.btn-primary:hover {
-  background: var(--color-primary-hover);
+.btn-secondary {
+  background: var(--color-secondary);
+  color: #0f1420;
+  box-shadow: 0 4px 0 var(--color-secondary-hover);
 }
-
-.btn-success {
-  background: var(--color-success);
-  color: white;
-}
-
-.btn-success:hover {
-  background: var(--color-success-hover);
-}
+.btn-secondary:active { box-shadow: 0 1px 0 var(--color-secondary-hover); transform: translateY(3px); }
 
 .btn-ghost {
-  background: transparent;
+  background: var(--color-card);
   border: 1px solid var(--color-border);
   color: var(--color-text);
+}
+html {
+  box-sizing: border-box;
+}
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+img {
+  max-width: 100%;
+  height: auto;
 }

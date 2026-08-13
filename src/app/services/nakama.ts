@@ -152,4 +152,36 @@ export class NakamaService {
     const result = await this.client.listNotifications(this.session, 10);
     return result.notifications ?? [];
   }
+  async submitScore(leaderboardId: string, score: number): Promise<void> {
+    if (!this.session) return;
+    await this.client.writeLeaderboardRecord(this.session, leaderboardId, { score: String(Math.floor(score)) });
+  }
+
+  async getLeaderboard(leaderboardId: string, limit = 5): Promise<any[]> {
+    if (!this.session) return [];
+    const result = await this.client.listLeaderboardRecords(this.session, leaderboardId, undefined, limit);
+    return result.records ?? [];
+  }
+
+  async awardCoins(score: number, livesLeft: number, playerCount: number, won: boolean): Promise<number> {
+    if (!this.session) return 0;
+    const result = await this.client.rpc(this.session, 'award_match_coins', {
+      score, lives_left: livesLeft, player_count: playerCount, won
+    });
+    const parsed = JSON.parse(result.payload as any);
+    return parsed.coins_awarded;
+  }
+
+  //
+  getUsername(): string | null {
+    return this.session?.username ?? null;
+  }
+
+  // result holder
+  lastResult: {
+    mode: 'solo' | 'multiplayer';
+    score: number;
+    highScore: number;
+    standings?: { username: string; score: number; isLocal: boolean }[];
+  } | null = null;
 }

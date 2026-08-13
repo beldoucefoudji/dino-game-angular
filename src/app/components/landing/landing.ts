@@ -1,87 +1,69 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { getDeviceId } from '../../services/device-id';
 import { NakamaService } from '../../services/nakama';
-import { ThemeService } from '../../services/theme';
+import { LanguageService } from '../../services/language';
+import { SoundService } from '../../services/sound';
 
 @Component({
   selector: 'app-landing',
-  standalone: true,
   imports: [RouterLink],
   templateUrl: './landing.html',
-  styleUrls: ['./landing.css']
+  styleUrl: './landing.css'
 })
 export class Landing implements OnInit {
-  personalBest = 18422;
-  username = '';
-  isLoggingIn = false;
-  isDarkMode = false;
-  isGalleryOpen = false;
-  selectedGalleryImage = '/g2.JPG';
+  username: string | null = null;
+  showHowToPlay = false;
 
-  galleryImages = [
-    { src: '/g1.JPG', alt: 'Dino Runner character in a prehistoric landscape' },
-    { src: '/g2.JPG', alt: 'Dino Runner environment preview' },
-    { src: '/hero-placeholder.JPG', alt: 'Dino Runner race atmosphere' }
-  ];
-
-  topPlayers = [
-    { rank: 1, name: 'beldouce', score: 61250 },
-    { rank: 2, name: 'elmine', score: 54270 },
-    { rank: 3, name: 'bella', score: 38480 }
-  ];
+  private translations = {
+    en: {
+      title: 'DINO RUNNER', tagline: 'RACE · JUMP · SURVIVE',
+      start: '▶ Start Game', leaderboard: '🏆 Leaderboard', howTo: '❔ How to Play', login: '👤 Login',
+      howToTitle: 'How to Play',
+      rule1: 'Space :Jump over cacti', rule2: 'Down Arrow : Duck under birds',
+      rule3: 'You have 4 lives :a hit freezes you briefly, then grants short invincibility',
+      rule4: 'Survive as long as possible : score is based on time survived',
+      rule5: 'In multiplayer, the last player standing (or highest score when time runs out) wins',
+      gotIt: 'Got it'
+    },
+    fr: {
+      title: 'DINO RUNNER', tagline: 'COURS · SAUTE · SURVIS',
+      start: '▶ Jouer', leaderboard: '🏆 Classement', howTo: '❔ Comment jouer', login: '👤 Connexion',
+      howToTitle: 'Comment jouer',
+      rule1: 'Espace : Sauter par-dessus les cactus', rule2: 'Flèche bas : Se baisser sous les oiseaux',
+      rule3: 'Vous avez 4 vies : un coup vous gèle brièvement, puis accorde une invincibilité courte',
+      rule4: 'Survivez le plus longtemps possible : le score dépend du temps de survie',
+      rule5: 'En multijoueur, le dernier joueur en vie (ou le meilleur score) gagne',
+      gotIt: 'Compris'
+    }
+  };
 
   constructor(
     private router: Router,
     private nakama: NakamaService,
-    private themeService: ThemeService
+    public language: LanguageService,
+    public sound: SoundService
   ) {}
 
   ngOnInit() {
-    this.themeService.initializeTheme();
-    this.isDarkMode = this.themeService.isDarkMode;
+    this.username = this.nakama.isAuthenticated() ? this.nakama.getUsername() : null;
   }
 
-  toggleTheme() {
-    this.themeService.toggleTheme();
-    this.isDarkMode = this.themeService.isDarkMode;
+  t(key: string): string {
+    return (this.translations as any)[this.language.lang()][key];
   }
 
   onStartGame() {
-    this.router.navigate(['/solo-game']);
+    this.sound.play(500);
+    this.router.navigate(['/mode-select']);
   }
 
-  onJoinMatch() {
-    this.router.navigate(['/auth']);
+  onLeaderboard() {
+    this.sound.play(500);
+    this.router.navigate(['/leaderboard']);
   }
 
-  openGallery() {
-    this.selectedGalleryImage = this.galleryImages[0].src;
-    this.isGalleryOpen = true;
-  }
-
-  closeGallery() {
-    this.isGalleryOpen = false;
-  }
-
-  selectGalleryImage(image: { src: string; alt: string }) {
-    this.selectedGalleryImage = image.src;
-  }
-
-  async onLogin() {
-    this.isLoggingIn = true;
-    try {
-      const deviceId = getDeviceId();
-      const session = await this.nakama.authenticate(deviceId);
-      this.nakama.updateProfile({
-        username: session.username ?? 'Player',
-        email: ''
-      });
-      this.username = this.nakama.getProfile().username;
-    } catch (error) {
-      console.error('Login failed:', error);
-    } finally {
-      this.isLoggingIn = false;
-    }
+  toggleHowToPlay() {
+    this.sound.play(400);
+    this.showHowToPlay = !this.showHowToPlay;
   }
 }

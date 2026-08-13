@@ -1,42 +1,46 @@
 <div class="auth-page">
-  <div class="auth-header">
-    <h1>Dino Runner</h1>
-    <p>Step into the Natural Flow. A premium sanctuary for high-end motion gaming.</p>
+  <a class="back-btn" routerLink="/">←</a>
+
+  <div class="lang-sound-row">
+    <button class="icon-btn" (click)="language.toggle()">{{ language.lang() === 'en' ? '🌐 EN' : '🌐 FR' }}</button>
+    <button class="icon-btn" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
   </div>
 
+  <header class="auth-header">
+    <div class="title-stack">
+      <div class="pixel-title">
+        <span class="word dino">DINO</span>
+        <span class="word runner">RUNNER</span>
+      </div>
+      <div class="tagline">RACE • JUMP • SURVIVE</div>
+    </div>
+  </header>
+
   <div class="auth-card">
+    <h2>WELCOME BACK, RUNNER!</h2>
+
     <div class="auth-tabs">
-      <button
-        class="tab"
-        [class.active]="mode === 'login'"
-        (click)="mode = 'login'">Login</button>
-      <button
-        class="tab"
-        [class.active]="mode === 'signup'"
-        (click)="mode = 'signup'">Sign up</button>
+      <button class="tab" [class.active]="mode === 'login'" (click)="switchMode('login')">{{ t('login') }}</button>
+      <button class="tab" [class.active]="mode === 'signup'" (click)="switchMode('signup')">{{ t('signup') }}</button>
     </div>
-
-    <div class="oauth-row">
-      <button class="oauth-btn" disabled title="Coming soon">Google</button>
-      
-    </div>
-
-    <div class="divider"><span>OR USE EMAIL</span></div>
 
     <form (ngSubmit)="onSubmit()">
-      <label>Email Address</label>
-      <input type="email" placeholder="runner@example.com" [(ngModel)]="email" name="email" required />
+      <label>✉️ Email Address</label>
+      <input type="email" [(ngModel)]="email" name="email" required />
 
-      <label>Password</label>
-      <input type="password" placeholder="••••••••" [(ngModel)]="password" name="password" required />
+      <label>🔒 Password</label>
+      <div class="password-wrap">
+        <input type="password" [(ngModel)]="password" name="password" required />
+        <span class="eye">◉</span>
+      </div>
 
       @if (mode === 'login') {
         <div class="options-row">
           <label class="checkbox-label">
             <input type="checkbox" [(ngModel)]="keepSignedIn" name="keepSignedIn" />
-            Keep me signed in
+            Remember me
           </label>
-          <a href="#">Forgot password?</a>
+          <a href="#">Forgot Password?</a>
         </div>
       }
 
@@ -45,16 +49,23 @@
       }
 
       <button type="submit" class="btn-primary submit-btn" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Connecting...' : (mode === 'login' ? 'Join the Race' : 'Create Account') }}
-      </button>
-
-      <button type="button" class="btn-ghost submit-btn" (click)="goHome()">
-        Back to Home
+        {{ isSubmitting ? '...' : 'LOGIN' }}
       </button>
     </form>
 
-    <p class="terms">
-      By joining, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+    <div class="divider"><span>OR CONTINUE WITH</span></div>
+
+    <div class="oauth-row">
+      <button class="oauth-btn google" type="button">Google</button>
+      <button class="oauth-btn discord" type="button">Discord</button>
+    </div>
+
+    <p class="switch-note">
+      Don't have an account? <a (click)="switchMode('signup')">Sign up</a>
     </p>
   </div>
+
+  <button class="home-btn" routerLink="/" type="button">
+    <span>←</span> BACK TO HOME
+  </button>
 </div>

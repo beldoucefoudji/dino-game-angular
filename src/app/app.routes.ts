@@ -6,6 +6,8 @@ import { Dashboard } from './components/dashboard/dashboard';
 import { SoloGame } from './components/solo-game/solo-game';
 import { Lobby } from './components/lobby/lobby';
 import { MatchGame } from './components/match-game/match-game';
+import { Leaderboard } from './components/leaderboard/leaderboard';
+import { Results } from './components/results/results';
 export const routes: Routes = [
   { path: '', component: Landing },
   { path: 'mode-select', component: ModeSelect },
@@ -15,5 +17,7 @@ export const routes: Routes = [
   { path: 'solo-game', component: SoloGame },
   { path: 'lobby/:matchId', component: Lobby },
   { path: 'match/:matchId', component: MatchGame },
+  { path: 'leaderboard', component: Leaderboard },
+  { path: 'results', component: Results },
 ];
 

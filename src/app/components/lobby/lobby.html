@@ -1,118 +1,70 @@
 <div class="lobby-page">
-  <header class="lobby-topbar">
-    <div>
-      <p class="eyebrow">Multiplayer Lobby</p>
-      <h1>{{ matchId ? 'The Sunlit Mesa' : 'Loading...' }}</h1>
-      <p class="subtitle">A live-ready arena for up to 8 racers. Gather your crew, lock in your loadout, and launch when the room is primed.</p>
+  <div class="lobby-topbar">
+    <div class="room-info">
+      <span class="room-label">{{ t('room') }}</span>
+      <span class="room-code">{{ matchId | slice:0:5 }}</span>
+      <button class="icon-btn" (click)="copyMatchId()">📋 {{ t('copy') }}</button>
     </div>
-   <div class="topbar-chip" [class.pending]="players.length < 2">
-      <span class="chip-dot"></span>
-      <span>{{ players.length >= 2 ? 'Ready to race' : 'Waiting for players' }}</span>
+    <div class="lang-sound-row">
+      <button class="icon-btn" (click)="language.toggle()">{{ language.lang() === 'en' ? '🌐 EN' : '🌐 FR' }}</button>
+      <button class="icon-btn" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
     </div>
-  </header>
-
-  <main class="lobby-main">
-    <section class="lobby-primary">
-      <div class="session-card">
-        <div class="session-copy">
-          <p class="active-session-label">Active session</p>
-          <h2>Shared route · Northern Wilds</h2>
-          <p class="waiting-note">Waiting for players... · Match ID syncs live and the course is warming up.</p>
-        </div>
-        <img class="arena-preview" src="/dino.avif" alt="Dinosaur race preview" />
-      </div>
-
-      <div class="info-grid">
-        <article class="info-card">
-          <p class="panel-title">Session focus</p>
-          <ul>
-            <li>Balanced lanes and fair respawns</li>
-            <li>Short, punchy rounds</li>
-            <li>Live countdown warming up</li>
-          </ul>
-        </article>
-
-        <article class="info-card highlight">
-          <p class="panel-title">Loadout</p>
-          <div class="loadout-preview">
-            <div class="loadout-swatch" [style.background]="selectedColor"></div>
-            <div>
-              <strong>Current color</strong>
-              <p>Choose a dino skin before the race begins.</p>
-            </div>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <aside class="lobby-sidebar">
-      <div class="players-panel">
-        <div class="panel-header">
-          <p class="panel-title">Players ({{ players.length }}/8)</p>
-          <span class="pill">Live</span>
-        </div>
-
-        @for (player of players; track player.userId) {
-          <div class="player-row">
-            <div class="avatar-dot"></div>
-            <div class="player-info">
-              <p class="player-name">{{ player.username }}</p>
-              <p class="player-sub">Explorer · ready for takeoff</p>
-            </div>
-            <span class="ready-pill ready">Ready</span>
-          </div>
-        }
-
-        @if (!players.length) {
-          <p class="empty-state">The room is quiet. Invite a friend to kick off the match.</p>
-        }
-      </div>
-
-      <div class="lobby-code-card">
-  <p class="panel-title">Lobby code</p>
-  <div class="lobby-code">{{ matchId || 'Waiting...' }}</div>
-  <button class="btn-ghost full-width" (click)="copyMatchId()">Copy invite code</button>
-
-  <div class="invite-row">
-    <input type="text" placeholder="Friend's User ID" [(ngModel)]="inviteUserId" />
-    <button class="btn-primary" (click)="sendInvite()">Invite</button>
   </div>
-  @if (inviteStatus) {
-    <p class="invite-status">{{ inviteStatus }}</p>
-  }
-</div>
 
-      <div class="chat-card">
-        <p class="panel-title">Match briefing</p>
-        <p class="chat-placeholder">Use this room to coordinate your route, timing, and power-up strategy.</p>
-      </div>
-    </aside>
-  </main>
+  <div class="lobby-body">
+    <div class="players-card">
+      <p class="panel-title">{{ t('players') }} ({{ players.length }}/4)</p>
 
-  <footer class="lobby-footer">
-    <div class="footer-actions">
-      <button class="btn-ghost" disabled title="Coming soon">Voice Comms</button>
-      <button class="btn-ghost" disabled title="Coming soon">High Performance Mode</button>
-      <button class="btn-ghost" (click)="openLoadout()">Change Loadout</button>
+      @for (player of players; track player.userId; let i = $index) {
+        <div class="player-row">
+          <span class="player-avatar">🦖</span>
+          <span class="player-name">{{ player.username }}</span>
+          @if (i === 0) { <span class="crown">👑</span> }
+          <span class="ready-tag">{{ t('ready') }}</span>
+        </div>
+      }
+      @for (slot of [0,1,2,3]; track slot) {
+        @if (slot >= players.length) {
+          <div class="player-row empty">
+            <span class="player-avatar">👤</span>
+            <span class="player-name muted">{{ t('waiting') }}</span>
+          </div>
+        }
+      }
     </div>
-    <button class="btn-primary" [disabled]="players.length < 2" (click)="onStartMatch()">Start match</button>
-  </footer>
+
+    <div class="settings-card">
+      <div class="settings-header">
+        <p class="panel-title">{{ t('settings') }}</p>
+        <button class="icon-btn small" (click)="openLoadout()">🎨</button>
+      </div>
+      <div class="setting-row"><span>{{ t('mode') }}</span><strong>{{ t('race') }}</strong></div>
+      <div class="setting-row"><span>{{ t('obstacles') }}</span><strong>{{ t('normal') }}</strong></div>
+      <div class="setting-row"><span>{{ t('timeLimit') }}</span><strong>180s</strong></div>
+
+      <div class="invite-row">
+        <input type="text" [placeholder]="t('invitePlaceholder')" [(ngModel)]="inviteUserId" />
+        <button class="btn-ghost" (click)="sendInvite()">{{ t('invite') }}</button>
+      </div>
+      @if (inviteStatus) { <p class="invite-status">{{ inviteStatus }}</p> }
+
+      <button class="btn-primary full-width start-btn" [disabled]="players.length < 2" (click)="onStartMatch()">
+        {{ t('start') }}
+      </button>
+    </div>
+  </div>
 
   @if (showLoadout) {
     <div class="loadout-overlay" (click)="closeLoadout()">
       <div class="loadout-modal" (click)="$event.stopPropagation()">
-        <h2>Choose your dino color</h2>
+        <h2>{{ t('loadout') }}</h2>
         <div class="color-grid">
           @for (color of dinoColors; track color) {
-            <button
-              class="color-swatch"
-              [style.background]="color"
-              [class.selected]="color === selectedColor"
-              (click)="selectColor(color)">
-            </button>
+            <button class="color-swatch" [style.background]="color"
+              [class.selected]="color === selectedColor" (click)="selectColor(color)"></button>
           }
         </div>
-        <button class="btn-primary" (click)="closeLoadout()">Done</button>
+        <button class="btn-primary full-width" (click)="closeLoadout()">{{ t('done') }}</button>
       </div>
     </div>
   }

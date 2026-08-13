@@ -1,0 +1,20 @@
+<div class="leaderboard-page">
+  <button class="btn-ghost" (click)="goBack()">← Back</button>
+  <h1>🏆 Leaderboard</h1>
+
+  @if (loading) {
+    <p class="muted">Loading...</p>
+  } @else if (!entries.length) {
+    <p class="muted">No scores yet — be the first to play!</p>
+  } @else {
+    <div class="board">
+      @for (entry of entries; track entry.rank) {
+        <div class="board-row">
+          <span class="rank">{{ entry.rank }}</span>
+          <span class="name">{{ entry.username }}</span>
+          <span class="score">{{ entry.score }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>
