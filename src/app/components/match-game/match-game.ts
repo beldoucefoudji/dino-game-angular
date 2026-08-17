@@ -42,8 +42,11 @@ export class MatchGame implements AfterViewInit, OnDestroy {
   private dinoSprite = new Image();
   private cactusSprite = new Image();
   private birdSprite = new Image();
+  private skyImage = new Image();
+  private groundImage = new Image();
   private animationFrameId = 0;
   private matchId = '';
+  private scrollDistance = 0;
 
   private keys: Record<string, boolean> = {};
   private dinos: RaceDino[] = [];
@@ -75,9 +78,11 @@ export class MatchGame implements AfterViewInit, OnDestroy {
   displaySecondsLeft = 180;
   showStandings = true;
   standings: StandingEntry[] = [];
+  private matchEnded = false;
 
-  private readonly SW = 100;
-  private readonly SH = 90;
+  // reverted to the original placeholder sprite (64x64 frames)
+  private readonly SW = 64;
+  private readonly SH = 64;
   private readonly HIT_MARGIN = 14;
   private readonly OBS_MARGIN = 4;
 
@@ -94,9 +99,11 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     this.matchId = this.route.snapshot.paramMap.get('matchId') ?? '';
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
-    this.dinoSprite.src = '/dino-pixel-sprite-v2.png';
+    this.dinoSprite.src = '/dino-sprite.png';
     this.cactusSprite.src = '/cactus-pixel.png';
     this.birdSprite.src = '/bird-pixel.png';
+    this.skyImage.src = '/sky5.jpg';
+    this.groundImage.src = '/ground-f.png';
 
     this.rng = this.seededRandom(this.nakama.raceSeed);
 
@@ -130,6 +137,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
         dino.frameIndex = payload.frameIndex; dino.score = payload.score;
       } else if (matchData.op_code === 3) {
         dino.eliminated = true;
+        this.checkMatchEnd(performance.now());
       } else if (matchData.op_code === 4) {
         dino.lives = payload.lives;
         dino.freezeUntil = performance.now() + this.freezeDurationMs;
@@ -171,6 +179,22 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     };
   }
 
+  private checkMatchEnd(timestamp: number) {
+    if (this.matchEnded) return;
+    const stillAlive = this.dinos.filter(d => !d.eliminated).length;
+    if (stillAlive <= 1) {
+      this.matchEnded = true;
+      const me = this.dinos.find(d => d.isLocal)!;
+      this.nakama.lastResult = {
+        mode: 'multiplayer',
+        score: me.score,
+        highScore: me.score,
+        standings: this.dinos.map(d => ({ username: d.username, score: d.score, isLocal: d.isLocal }))
+      };
+      setTimeout(() => this.router.navigate(['/results']), 1200);
+    }
+  }
+
   private onKeyDown = (e: KeyboardEvent) => {
     this.keys[e.code] = true;
     if (e.code === 'ArrowUp' || e.code === 'ArrowDown') e.preventDefault();
@@ -187,6 +211,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
       this.lastStandingsUpdate = timestamp;
       this.refreshStandings();
     }
+    this.checkMatchEnd(timestamp);
   };
 
   private refreshStandings() {
@@ -210,6 +235,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     const elapsedMs = timestamp - this.matchStartTime;
     this.displaySecondsLeft = Math.max(0, Math.ceil((this.matchDurationMs - elapsedMs) / 1000));
     const effectiveSpeed = this.baseObstacleSpeed * this.currentSpeedMultiplier(elapsedMs);
+    this.scrollDistance += effectiveSpeed;
 
     this.obstacleX -= effectiveSpeed;
     if (this.obstacleX < -50) {
@@ -235,8 +261,10 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
       if (!isProtected) {
         const dinoHeight = me.isDucking ? 40 : 64;
-        const dinoDrawY = me.isDucking ? me.y + (64 - dinoHeight) : me.y;
-        const obsY = this.obstacleType === 'cactus' ? 14 : -10;
+        const dinoDrawY = (64 - dinoHeight) + me.y; // relative offset, matches draw()'s feet-anchoring
+
+        // aligned with draw()'s feetLine - 44 height for birds
+        const obsY = this.obstacleType === 'cactus' ? 24 : 20;
         const obsW = this.obstacleType === 'cactus' ? 22 : 24;
         const obsH = this.obstacleType === 'cactus' ? 40 : 14;
 
@@ -250,19 +278,11 @@ export class MatchGame implements AfterViewInit, OnDestroy {
           me.lives -= 1;
           if (me.lives <= 0) {
             me.eliminated = true;
-            // for result
-            this.nakama.lastResult = {
-            mode: 'multiplayer',
-            score: me.score,
-            highScore: me.score,
-             standings: this.dinos.map(d => ({ username: d.username, score: d.score, isLocal: d.isLocal }))
-            };
-            setTimeout(() => this.router.navigate(['/results']), 1500);
-
             this.nakama.sendElimination(this.matchId);
             this.nakama.submitScore('dino_multiplayer', me.score);
-            const stillAlive = this.dinos.filter(d => !d.eliminated).length;
-            this.nakama.awardCoins(me.score, me.lives, this.dinos.length, stillAlive === 0);
+            const stillAliveNow = this.dinos.filter(d => !d.eliminated).length;
+            this.nakama.awardCoins(me.score, me.lives, this.dinos.length, stillAliveNow === 0);
+            this.checkMatchEnd(timestamp);
           } else {
             me.freezeUntil = timestamp + this.freezeDurationMs;
             me.protectedUntil = timestamp + this.freezeDurationMs + this.invincibleDurationMs;
@@ -289,19 +309,45 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     this.ctx.fillStyle = sky;
     this.ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    const parallaxOffsetSky = (this.scrollDistance * 0.3) % canvas.width;
+    const parallaxOffsetGround = (this.scrollDistance * 0.5) % canvas.width;
+
     for (const dino of this.dinos) {
       const laneTop = dino.lane * this.laneHeight;
-      const groundY = laneTop + this.laneHeight - this.groundOffset;
+      const skyHeight = this.laneHeight * 0.72;
+      const groundStripStart = laneTop + skyHeight;   // where the ground texture begins
+      const groundHeight = this.laneHeight - skyHeight;
+      const feetLine = groundStripStart + 6;           // dino's feet rest just inside the ground strip
+
+      if (this.skyImage.complete && this.skyImage.naturalHeight > 0) {
+        this.ctx.drawImage(this.skyImage, -parallaxOffsetSky, laneTop, canvas.width, skyHeight);
+        this.ctx.drawImage(this.skyImage, canvas.width - parallaxOffsetSky, laneTop, canvas.width, skyHeight);
+      }
+
+      if (this.groundImage.complete && this.groundImage.naturalHeight > 0) {
+        this.ctx.drawImage(this.groundImage, -parallaxOffsetGround, groundStripStart, canvas.width, groundHeight);
+        this.ctx.drawImage(this.groundImage, canvas.width - parallaxOffsetGround, groundStripStart, canvas.width, groundHeight);
+      }
 
       this.ctx.strokeStyle = dino.isLocal ? '#4ade80' : 'rgba(255,255,255,0.15)';
       this.ctx.lineWidth = dino.isLocal ? 2 : 1;
       this.ctx.strokeRect(0, laneTop, canvas.width, this.laneHeight);
 
+      // name + hearts drawn SEPARATELY so hearts can be their own color
       this.ctx.fillStyle = '#eef2f6';
       this.ctx.font = '11px sans-serif';
       this.ctx.textAlign = 'left';
-      const hearts = '❤'.repeat(Math.max(dino.lives, 0));
-      this.ctx.fillText(`${dino.username}${dino.isLocal ? ' (you)' : ''}  ${hearts}  ${Math.floor(dino.score)}pt`, 10, laneTop + 15);
+      const nameText = `${dino.username}${dino.isLocal ? ' (you)' : ''}`;
+      this.ctx.fillText(nameText, 10, laneTop + 15);
+      const nameWidth = this.ctx.measureText(nameText).width;
+
+      this.ctx.fillStyle = '#ff3b4e'; // red hearts
+      const heartsText = ' ' + '❤'.repeat(Math.max(dino.lives, 0));
+      this.ctx.fillText(heartsText, 10 + nameWidth, laneTop + 15);
+      const heartsWidth = this.ctx.measureText(heartsText).width;
+
+      this.ctx.fillStyle = '#eef2f6';
+      this.ctx.fillText(`  ${Math.floor(dino.score)}pt`, 10 + nameWidth + heartsWidth, laneTop + 15);
 
       const isFrozen = timestamp < dino.freezeUntil;
       const isProtected = timestamp < dino.protectedUntil;
@@ -309,14 +355,17 @@ export class MatchGame implements AfterViewInit, OnDestroy {
       else if (isProtected && !isFrozen) this.ctx.globalAlpha = Math.floor(timestamp / 100) % 2 === 0 ? 1 : 0.35;
 
       const dinoHeight = dino.isDucking ? 40 : 64;
-      const dinoDrawY = groundY + (dino.isDucking ? (64 - dinoHeight) : dino.y);
+      // feet anchored to feetLine, regardless of pose height — this is what makes it "stand" on the ground
+      const dinoDrawY = feetLine - dinoHeight + dino.y;
+
       let sx: number;
       if (dino.isJumping) sx = 3 * this.SW;
       else if (dino.isDucking) sx = dino.frameIndex === 1 ? 4 * this.SW : 5 * this.SW;
       else sx = dino.frameIndex * this.SW;
 
-      if (this.obstacleType === 'cactus') this.ctx.drawImage(this.cactusSprite, this.obstacleX, groundY + 14, 22, 40);
-      else this.ctx.drawImage(this.birdSprite, this.obstacleX, groundY - 10, 24, 14);
+      const obsY = this.obstacleType === 'cactus' ? feetLine - 40 : feetLine - 44;
+      if (this.obstacleType === 'cactus') this.ctx.drawImage(this.cactusSprite, this.obstacleX, obsY, 22, 40);
+      else this.ctx.drawImage(this.birdSprite, this.obstacleX, obsY, 24, 14);
 
       this.ctx.drawImage(this.dinoSprite, sx, 0, this.SW, this.SH, 50, dinoDrawY, 64, dinoHeight);
       this.ctx.globalAlpha = 1;

@@ -18,6 +18,8 @@ export class Auth {
   keepSignedIn = false;
   isSubmitting = false;
   errorMessage = '';
+  successMessage = '';
+  forgotPasswordMsg = '';
 
   private translations = {
     en: {
@@ -51,30 +53,73 @@ export class Auth {
     this.sound.play(420);
     this.mode = mode;
     this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  onForgotPassword() {
+    this.forgotPasswordMsg = "Password reset isn't available yet — coming soon!";
+    setTimeout(() => this.forgotPasswordMsg = '', 3000);
+  }
+
+  private validate(): string | null {
+    const email = this.email.trim();
+    const password = this.password.trim();
+
+    if (!email || !password) {
+      return 'Please fill in both email and password.';
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return 'Please enter a valid email address.';
+    }
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters.';
+    }
+    return null;
   }
 
   async onSubmit() {
-    this.errorMessage = '';
-    this.isSubmitting = true;
-    try {
-      const createAccount = this.mode === 'signup';
-      await this.nakama.authenticateEmail(this.email, this.password, createAccount);
-      this.sound.play(600, 0.12);
-      if (createAccount) {
-        this.mode = 'login';
-        this.password = '';
-        this.errorMessage = 'Account created — please log in.';
-      } else {
-        this.router.navigate(['/mode-select']);
-      }
-    } catch (error) {
-      console.error('Auth failed:', error);
-      this.sound.play(180, 0.15);
-      this.errorMessage = this.mode === 'login'
-        ? 'Incorrect email or password.'
-        : 'Could not create account. Try a different email.';
-    } finally {
-      this.isSubmitting = false;
-    }
+  this.errorMessage = '';
+  this.successMessage = '';
+
+  const validationError = this.validate();
+  if (validationError) {
+    this.errorMessage = validationError;
+    this.sound.play(200, 0.12);
+    return;
   }
+
+  this.isSubmitting = true;
+  try {
+    const createAccount = this.mode === 'signup';
+    await this.nakama.authenticateEmail(this.email.trim(), this.password.trim(), createAccount);
+    this.sound.play(600, 0.12);
+
+    if (createAccount) {
+      
+      this.successMessage = 'Account created successfully! Please log in.';
+      
+      
+      setTimeout(() => {
+        this.mode = 'login';
+        this.successMessage = '';
+        this.password = '';
+        this.isSubmitting = false;  
+      }, 3000);
+
+      
+      return;
+    } else {
+      this.sound.startMusic('/theme.mp3');
+      this.router.navigate(['/mode-select']);
+    }
+  } catch (error) {
+    console.error('Auth failed:', error);
+    this.sound.play(180, 0.15);
+    this.errorMessage = this.mode === 'login'
+      ? 'Incorrect email or password.'
+      : 'Could not create account. This email may already be registered.';
+    this.isSubmitting = false;
+  }
+}
+
 }

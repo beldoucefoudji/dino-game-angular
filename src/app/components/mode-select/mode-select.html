@@ -1,36 +1,70 @@
 <div class="mode-page">
-  <a class="back-btn" routerLink="/">←</a>
+  <a class="back-btn" routerLink="/">
+    <i class="bi bi-arrow-left"></i>
+  </a>
   <div class="lang-sound-row">
-    <button class="icon-btn" (click)="language.toggle()">{{ language.lang() === 'en' ? '🌐 EN' : '🌐 FR' }}</button>
-    <button class="icon-btn" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
+    <button class="icon-btn" (click)="language.toggle()">
+      <i class="bi bi-globe"></i>
+    </button>
+    <button class="icon-btn" (click)="sound.toggleMute()">
+      <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted"></i>
+    </button>
   </div>
 
-  <h1>🦕 {{ t('heading') }} 🦕</h1>
+  <h1><i class="bi bi-controller"></i> {{ t('heading') }}</h1>
   <p class="sub">{{ t('sub') }}</p>
 
   <div class="mode-grid">
     <div class="mode-card solo" (click)="playSolo()">
-      <img class="mode-image" src="/solo.avif" alt="Solo mode" />
+      <img src="/solo.avif" alt="Solo mode" class="mode-image" />
       <h3>{{ t('solo') }}</h3>
       <p>{{ t('soloDesc') }}</p>
     </div>
 
-    <div class="mode-card multi" (click)="createMatch()">
-      <img class="mode-image" src="/multi.avif" alt="Multiplayer mode" />
+    <div class="mode-card multi" (click)="openMultiplayerSetup()">
+      <img src="/multi.avif" alt="Multiplayer mode" class="mode-image" />
       <h3>{{ t('multi') }}</h3>
       <p>{{ t('multiDesc') }}</p>
-      @if (isConnecting) {
-        <p class="status">Connecting...</p>
-      }
     </div>
   </div>
 
   <div class="join-block" (click)="$event.stopPropagation()">
     <input type="text" [placeholder]="t('join')" [(ngModel)]="joinCode" />
-    <button class="btn-secondary" (click)="joinMatch()">{{ t('go') }}</button>
+    <button class="btn-secondary" (click)="joinMatch()">
+      <i class="bi bi-box-arrow-in-right"></i> {{ t('go') }}
+    </button>
   </div>
 
   @if (connectError) {
     <p class="error-text">{{ connectError }}</p>
+  }
+
+  @if (showMultiplayerModal) {
+    <div class="modal-overlay" (click)="cancelMultiplayerSetup()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <h2><i class="bi bi-people-fill"></i> {{ t('modalTitle') }}</h2>
+
+        <label>{{ t('username') }}</label>
+        <input type="text" [(ngModel)]="matchUsername" />
+
+        <label>{{ t('players') }}</label>
+        <select [(ngModel)]="maxPlayers">
+          <option [value]="2">2</option>
+          <option [value]="3">3</option>
+          <option [value]="4">4</option>
+          <option [value]="6">6</option>
+          <option [value]="8">8</option>
+        </select>
+
+        <div class="modal-actions">
+          <button class="btn-ghost" (click)="cancelMultiplayerSetup()">
+            <i class="bi bi-x-circle"></i> {{ t('cancel') }}
+          </button>
+          <button class="btn-primary" [disabled]="isConnecting" (click)="confirmMultiplayerSetup()">
+            <i class="bi bi-check-circle-fill"></i> {{ isConnecting ? '...' : t('validate') }}
+          </button>
+        </div>
+      </div>
+    </div>
   }
 </div>

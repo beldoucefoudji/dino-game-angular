@@ -1,9 +1,15 @@
 <div class="auth-page">
-  <a class="back-btn" routerLink="/">←</a>
+  <a class="back-btn" routerLink="/">
+    <i class="bi bi-arrow-left"></i>
+  </a>
 
   <div class="lang-sound-row">
-    <button class="icon-btn" (click)="language.toggle()">{{ language.lang() === 'en' ? '🌐 EN' : '🌐 FR' }}</button>
-    <button class="icon-btn" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
+    <button class="icon-btn" (click)="language.toggle()">
+      <i class="bi bi-globe"></i> {{ language.lang() === 'en' ? 'EN' : 'FR' }}
+    </button>
+    <button class="icon-btn" (click)="sound.toggleMute()">
+      <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted"></i>
+    </button>
   </div>
 
   <header class="auth-header">
@@ -25,13 +31,19 @@
     </div>
 
     <form (ngSubmit)="onSubmit()">
-      <label>✉️ Email Address</label>
+      <label>
+        <i class="bi bi-envelope-fill"></i> Email Address
+      </label>
       <input type="email" [(ngModel)]="email" name="email" required />
 
-      <label>🔒 Password</label>
+      <label>
+        <i class="bi bi-lock-fill"></i> Password
+      </label>
       <div class="password-wrap">
         <input type="password" [(ngModel)]="password" name="password" required />
-        <span class="eye">◉</span>
+        <span class="eye">
+          <i class="bi bi-eye"></i>
+        </span>
       </div>
 
       @if (mode === 'login') {
@@ -48,16 +60,20 @@
         <p class="error-text">{{ errorMessage }}</p>
       }
 
-      <button type="submit" class="btn-primary submit-btn" [disabled]="isSubmitting">
-        {{ isSubmitting ? '...' : 'LOGIN' }}
+      <button type="submit" class="submit-btn" [disabled]="isSubmitting">
+        {{ isSubmitting ? '...' : (mode === 'login' ? t('submitLogin') : t('submitSignup')) }}
       </button>
     </form>
 
     <div class="divider"><span>OR CONTINUE WITH</span></div>
 
     <div class="oauth-row">
-      <button class="oauth-btn google" type="button">Google</button>
-      <button class="oauth-btn discord" type="button">Discord</button>
+      <button class="oauth-btn google" type="button">
+        <i class="bi bi-google"></i> Google
+      </button>
+      <button class="oauth-btn discord" type="button">
+        <i class="bi bi-discord"></i> Discord
+      </button>
     </div>
 
     <p class="switch-note">
@@ -66,6 +82,6 @@
   </div>
 
   <button class="home-btn" routerLink="/" type="button">
-    <span>←</span> BACK TO HOME
+    <i class="bi bi-arrow-left"></i> BACK TO HOME
   </button>
 </div>

@@ -14,29 +14,6 @@ export class Landing implements OnInit {
   username: string | null = null;
   showHowToPlay = false;
 
-  private translations = {
-    en: {
-      title: 'DINO RUNNER', tagline: 'RACE · JUMP · SURVIVE',
-      start: '▶ Start Game', leaderboard: '🏆 Leaderboard', howTo: '❔ How to Play', login: '👤 Login',
-      howToTitle: 'How to Play',
-      rule1: 'Space :Jump over cacti', rule2: 'Down Arrow : Duck under birds',
-      rule3: 'You have 4 lives :a hit freezes you briefly, then grants short invincibility',
-      rule4: 'Survive as long as possible : score is based on time survived',
-      rule5: 'In multiplayer, the last player standing (or highest score when time runs out) wins',
-      gotIt: 'Got it'
-    },
-    fr: {
-      title: 'DINO RUNNER', tagline: 'COURS · SAUTE · SURVIS',
-      start: '▶ Jouer', leaderboard: '🏆 Classement', howTo: '❔ Comment jouer', login: '👤 Connexion',
-      howToTitle: 'Comment jouer',
-      rule1: 'Espace : Sauter par-dessus les cactus', rule2: 'Flèche bas : Se baisser sous les oiseaux',
-      rule3: 'Vous avez 4 vies : un coup vous gèle brièvement, puis accorde une invincibilité courte',
-      rule4: 'Survivez le plus longtemps possible : le score dépend du temps de survie',
-      rule5: 'En multijoueur, le dernier joueur en vie (ou le meilleur score) gagne',
-      gotIt: 'Compris'
-    }
-  };
-
   constructor(
     private router: Router,
     private nakama: NakamaService,
@@ -48,12 +25,14 @@ export class Landing implements OnInit {
     this.username = this.nakama.isAuthenticated() ? this.nakama.getUsername() : null;
   }
 
+  // Delegates string lookup to LanguageService cleanly (no emojis)
   t(key: string): string {
-    return (this.translations as any)[this.language.lang()][key];
+    return this.language.t(key);
   }
 
   onStartGame() {
     this.sound.play(500);
+    this.sound.startMusic('/theme1.mp3');
     this.router.navigate(['/mode-select']);
   }
 

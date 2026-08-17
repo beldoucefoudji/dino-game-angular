@@ -1,9 +1,17 @@
 <nav class="navbar">
-  <span class="logo">🦖 DINO RUNNER</span>
+  <span class="logo">
+    <i class="bi bi-controller"></i> DINO RUNNER
+  </span>
   <div class="nav-icons">
-    <button class="icon-btn" (click)="language.toggle()">{{ language.lang() === 'en' ? '🌐 EN' : '🌐 FR' }}</button>
-    <button class="icon-btn" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
-    <span class="guest-badge">{{ username || 'Guest' }}</span>
+    <button class="icon-btn" (click)="language.toggle()">
+      <i class="bi bi-globe"></i> {{ language.lang() === 'en' ? 'EN' : 'FR' }}
+    </button>
+    <button class="icon-btn" (click)="sound.toggleMute()">
+      <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted"></i>
+    </button>
+    <span class="guest-badge">
+      <i class="bi bi-person-circle"></i> {{ username || 'Guest' }}
+    </span>
   </div>
 </nav>
 
@@ -12,10 +20,18 @@
     <h1 class="game-title">{{ t('title') }}</h1>
     <p class="tagline">{{ t('tagline') }}</p>
     <div class="hero-actions">
-      <button class="btn-primary full-width" (click)="onStartGame()">{{ t('start') }}</button>
-      <button class="btn-secondary full-width" (click)="onLeaderboard()">{{ t('leaderboard') }}</button>
-      <button class="btn-ghost full-width" (click)="toggleHowToPlay()">{{ t('howTo') }}</button>
-      <a class="btn-ghost full-width login-link" routerLink="/auth">{{ t('login') }}</a>
+      <button class="btn-primary full-width" (click)="onStartGame()">
+        <i class="bi bi-play-fill"></i> {{ t('start') }}
+      </button>
+      <button class="btn-secondary full-width" (click)="onLeaderboard()">
+        <i class="bi bi-trophy-fill"></i> {{ t('leaderboard') }}
+      </button>
+      <button class="btn-ghost full-width" (click)="toggleHowToPlay()">
+        <i class="bi bi-question-circle-fill"></i> {{ t('howTo') }}
+      </button>
+      <a class="btn-ghost full-width login-link" routerLink="/auth">
+        <i class="bi bi-box-arrow-in-right"></i> {{ t('login') }}
+      </a>
     </div>
   </div>
 </section>
@@ -23,15 +39,19 @@
 @if (showHowToPlay) {
   <div class="modal-overlay" (click)="toggleHowToPlay()">
     <div class="modal-box" (click)="$event.stopPropagation()">
-      <h2>{{ t('howToTitle') }}</h2>
-      <ul>
-        <li>{{ t('rule1') }}</li>
-        <li>{{ t('rule2') }}</li>
-        <li>{{ t('rule3') }}</li>
-        <li>{{ t('rule4') }}</li>
-        <li>{{ t('rule5') }}</li>
+      <h2>
+        <i class="bi bi-info-circle-fill"></i> {{ t('howToTitle') }}
+      </h2>
+      <ul class="rules-list">
+        <li><i class="bi bi-caret-right-fill"></i> {{ t('rule1') }}</li>
+        <li><i class="bi bi-caret-right-fill"></i> {{ t('rule2') }}</li>
+        <li><i class="bi bi-caret-right-fill"></i> {{ t('rule3') }}</li>
+        <li><i class="bi bi-caret-right-fill"></i> {{ t('rule4') }}</li>
+        <li><i class="bi bi-caret-right-fill"></i> {{ t('rule5') }}</li>
       </ul>
-      <button class="btn-primary full-width" (click)="toggleHowToPlay()">{{ t('gotIt') }}</button>
+      <button class="btn-primary full-width" (click)="toggleHowToPlay()">
+        <i class="bi bi-check-lg"></i> {{ t('gotIt') }}
+      </button>
     </div>
   </div>
 }

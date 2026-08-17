@@ -13,9 +13,47 @@
   position: relative;
 }
 
+/* Base styles */
 .back-btn {
-  position: absolute; top: 24px; left: 24px;
-  color: var(--color-text); text-decoration: none; font-size: 20px;
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 100;
+  
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #000000;
+  color: #ffffff;
+  
+  text-decoration: none;
+  font-size: 26px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.back-btn:hover {
+  background-color: #1a1a1a;
+  transform: scale(1.08);
+}
+
+.back-btn i {
+  line-height: 1;
+}
+
+/* Mobile responsive tweak */
+@media (max-width: 480px) {
+  .back-btn {
+    top: 16px;
+    left: 16px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
 }
 .lang-sound-row {
   position: absolute; top: 24px; right: 24px;
@@ -163,3 +201,19 @@
     height: 170px;
   }
 }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+  display: flex; align-items: center; justify-content: center; z-index: 60;
+}
+.modal-box {
+  background: var(--color-card); border: 1px solid var(--color-border);
+  border-radius: 16px; padding: 24px; max-width: 320px; width: 90%; text-align: left;
+}
+.modal-box h2 { color: var(--color-primary); font-size: 16px; margin-bottom: 16px; }
+.modal-box label { display: block; font-size: 11px; color: var(--color-text-muted); margin-bottom: 6px; }
+.modal-box input, .modal-box select {
+  width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--color-border);
+  background: var(--color-bg-alt); color: var(--color-text); margin-bottom: 16px; box-sizing: border-box;
+}
+.modal-actions { display: flex; gap: 10px; }
+.modal-actions button { flex: 1; }

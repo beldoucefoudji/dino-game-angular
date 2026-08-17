@@ -2,20 +2,30 @@
   <div class="canvas-wrap">
     <canvas #gameCanvas width="1100" height="500"></canvas>
 
-    <button class="back-btn" (click)="onExit()">←</button>
+    <button class="back-btn" (click)="onExit()">
+      <i class="bi bi-arrow-left"></i>
+    </button>
 
     <div class="top-left-icons">
-      <button class="icon-btn round" (click)="language.toggle()">{{ language.lang() === 'en' ? '🌐' : '🌐' }}</button>
-      <button class="icon-btn round" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
+      <button class="icon-btn round" (click)="language.toggle()">
+        <i class="bi bi-globe"></i>
+      </button>
+      <button class="icon-btn round" (click)="sound.toggleMute()">
+        <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted"></i>
+      </button>
     </div>
 
     <div class="player-card">
-      <span class="avatar">🦖</span>
+      <span class="avatar">
+        <i class="bi bi-person-fill"></i>
+      </span>
       <div>
         <p class="player-name">{{ username }}</p>
         <div class="hearts">
           @for (i of [1,2,3]; track i) {
-            <span [class.dim]="i > lives">❤</span>
+            <span [class.dim]="i > lives">
+              <i class="bi" [class.bi-heart-fill]="i <= lives" [class.bi-heart]="i > lives"></i>
+            </span>
           }
         </div>
       </div>
@@ -28,8 +38,12 @@
     </div>
 
     <div class="top-right">
-      <div class="coin-badge">🪙 {{ coins }}</div>
-      <button class="icon-btn round" (click)="togglePause()">{{ isPaused ? '▶' : '⏸' }}</button>
+      <div class="coin-badge">
+        <i class="bi bi-coin"></i> {{ coins }}
+      </div>
+      <button class="icon-btn round" (click)="togglePause()">
+        <i class="bi" [class.bi-play-fill]="isPaused" [class.bi-pause-fill]="!isPaused"></i>
+      </button>
     </div>
 
     <div class="speed-panel">
@@ -44,16 +58,18 @@
     <div class="distance-wrap">
       <div class="distance-bar">
         <div class="distance-fill" [style.width.%]="distancePercent"></div>
-        <span class="flag">🏁</span>
+        <span class="flag">
+          <i class="bi bi-flag-fill"></i>
+        </span>
       </div>
       <span class="distance-label">{{ Math.floor(score * 3) }} M</span>
     </div>
 
     <button class="touch-btn jump-btn" (pointerdown)="pressJump()" (pointerup)="releaseJump()">
-      <span>⬆</span><small>JUMP</small>
+      <span><i class="bi bi-arrow-up-circle-fill"></i></span><small>JUMP</small>
     </button>
     <button class="touch-btn duck-btn" (pointerdown)="pressDuck()" (pointerup)="releaseDuck()">
-      <span>⬇</span><small>SLIDE</small>
+      <span><i class="bi bi-arrow-down-circle-fill"></i></span><small>SLIDE</small>
     </button>
   </div>
 </div>

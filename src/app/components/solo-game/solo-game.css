@@ -22,73 +22,186 @@ canvas {
   display: block;
 }
 
+/* Base style & centering for Back Button */
 .back-btn {
-  position: absolute; top: 12px; left: 12px;
-  background: rgba(15,20,32,0.6); border: 1px solid var(--color-border);
-  color: #fff; border-radius: 50%; width: 32px; height: 32px; font-size: 14px;
+  position: absolute; 
+  top: 12px; 
+  left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 20, 32, 0.85); 
+  border: 1px solid var(--color-border);
+  color: #fff; 
+  border-radius: 50%; 
+  width: 36px; 
+  height: 36px; 
+  font-size: 16px;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  z-index: 5;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.back-btn:hover {
+  background: #000;
+  transform: scale(1.05);
+}
+
+.back-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Top Left Utility Bar */
+.top-left-icons {
+  position: absolute; 
+  top: 12px; 
+  left: 56px;
+  display: flex; 
+  align-items: center;
+  gap: 8px; 
   z-index: 5;
 }
 
-.top-left-icons {
-  position: absolute; top: 12px; left: 54px;
-  display: flex; gap: 6px; z-index: 5;
+.icon-btn.round {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%; 
+  width: 36px; 
+  height: 36px; 
+  padding: 0; 
+  background: rgba(15, 20, 32, 0.7); 
+  border: 1px solid var(--color-border); 
+  color: #fff; 
+  font-size: 14px; 
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
-.player-card {
-  position: absolute; top: 52px; left: 54px;
-  background: rgba(15,20,32,0.7); border: 1px solid var(--color-border);
-  border-radius: 10px; padding: 6px 10px; display: flex; align-items: center; gap: 8px;
-  font-size: 11px; color: #fff; z-index: 5;
+.icon-btn.round:hover {
+  background: rgba(15, 20, 32, 0.95);
 }
-.avatar { font-size: 20px; }
+
+.icon-btn.round i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Player Profile Card */
+.player-card {
+  position: absolute; 
+  top: 56px; 
+  left: 12px;
+  background: rgba(15, 20, 32, 0.7); 
+  border: 1px solid var(--color-border);
+  border-radius: 10px; 
+  padding: 6px 10px; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px;
+  font-size: 11px; 
+  color: #fff; 
+  z-index: 5;
+}
+
+.avatar { 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px; 
+}
+
 .player-name { margin: 0; font-weight: 700; }
-.hearts span { color: var(--color-danger); }
+.hearts { display: flex; gap: 2px; }
+.hearts span { color: var(--color-danger); display: flex; align-items: center; }
 .hearts span.dim { color: #444; }
 
+/* Score Panel */
 .score-panel {
-  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-  background: rgba(15,20,32,0.7); border: 1px solid var(--color-border);
-  border-radius: 10px; padding: 6px 18px; text-align: center; color: #fff; z-index: 5;
+  position: absolute; 
+  top: 12px; 
+  left: 50%; 
+  transform: translateX(-50%);
+  background: rgba(15, 20, 32, 0.7); 
+  border: 1px solid var(--color-border);
+  border-radius: 10px; 
+  padding: 6px 18px; 
+  text-align: center; 
+  color: #fff; 
+  z-index: 5;
 }
 .score-label { font-size: 9px; letter-spacing: 0.1em; color: var(--color-text-muted); margin: 0; }
 .score-value { font-size: 20px; font-weight: 800; color: var(--color-gold); margin: 0; }
 .best-value { font-size: 9px; color: var(--color-text-muted); margin: 0; }
 
-.top-right { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; align-items: center; z-index: 5; }
-.coin-badge {
-  background: rgba(15,20,32,0.7); border: 1px solid var(--color-border);
-  border-radius: 20px; padding: 6px 12px; font-size: 12px; color: var(--color-gold); font-weight: 700;
+/* Top Right Container */
+.top-right { 
+  position: absolute; 
+  top: 12px; 
+  right: 12px; 
+  display: flex; 
+  gap: 8px; 
+  align-items: center; 
+  z-index: 5; 
 }
-.icon-btn.round { border-radius: 50%; width: 32px; height: 32px; padding: 0; background: rgba(15,20,32,0.7); border: 1px solid var(--color-border); color: #fff; font-size: 13px; }
 
+.coin-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(15, 20, 32, 0.7); 
+  border: 1px solid var(--color-border);
+  border-radius: 20px; 
+  padding: 6px 12px; 
+  font-size: 12px; 
+  color: var(--color-gold); 
+  font-weight: 700;
+}
+
+/* Speed Panel */
 .speed-panel { position: absolute; top: 56px; right: 12px; text-align: right; z-index: 5; }
 .speed-label { font-size: 9px; color: var(--color-text-muted); margin: 0 0 3px; }
 .speed-bar { display: flex; gap: 3px; }
 .speed-seg { width: 14px; height: 6px; background: #333; border-radius: 3px; }
 .speed-seg.filled { background: var(--color-primary); }
 
+/* Distance Indicator */
 .distance-wrap { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); text-align: center; width: 60%; max-width: 320px; z-index: 5; }
 .distance-bar { position: relative; height: 8px; background: rgba(0,0,0,0.4); border-radius: 4px; }
 .distance-fill { height: 100%; background: var(--color-primary); border-radius: 4px; transition: width 0.2s linear; }
-.flag { position: absolute; right: -10px; top: -8px; font-size: 14px; }
+.flag { position: absolute; right: -10px; top: -8px; font-size: 14px; display: flex; align-items: center; }
 .distance-label {
   display: inline-block; margin-top: 6px; font-size: 11px; color: #fff;
   background: rgba(15,20,32,0.7); border: 1px solid var(--color-border); border-radius: 10px; padding: 2px 10px;
 }
 
+/* Touch Control Buttons */
 .touch-btn {
   position: absolute; bottom: 16px; z-index: 5;
   background: rgba(15,20,32,0.75); border: 2px solid var(--color-gold);
   color: #fff; border-radius: 50%; width: 56px; height: 56px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  padding: 0;
+  cursor: pointer;
 }
-.touch-btn span { font-size: 18px; }
+.touch-btn span { font-size: 18px; display: flex; align-items: center; justify-content: center; line-height: 1; }
 .touch-btn small { font-size: 8px; color: var(--color-gold); font-weight: 700; }
 .jump-btn { left: 16px; }
 .duck-btn { right: 16px; }
 
 @media (max-width: 700px) {
-  .player-card { font-size: 10px; padding: 4px 8px; top: 46px; }
+  .player-card { font-size: 10px; padding: 4px 8px; top: 52px; left: 12px; }
   .score-value { font-size: 15px; }
   .distance-wrap { bottom: 80px; }
+}
+/* to hide the bar*/
+.distance-wrap {
+  display: none; 
 }

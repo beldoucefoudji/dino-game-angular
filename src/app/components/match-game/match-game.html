@@ -2,11 +2,13 @@
   <div class="canvas-wrap">
     <canvas #gameCanvas width="1100" height="500"></canvas>
 
-    <button class="back-btn" (click)="onExit()">←</button>
+    <button class="back-btn" (click)="onExit()"><i class="fa-solid fa-arrow-left"></i></button>
 
     <div class="top-left-icons">
-      <button class="icon-btn round" (click)="language.toggle()">🌐</button>
-      <button class="icon-btn round" (click)="sound.toggleMute()">{{ sound.muted ? '🔇' : '🔊' }}</button>
+      <button class="icon-btn round" (click)="language.toggle()"><i class="fa-solid fa-globe"></i></button>
+      <button class="icon-btn round" (click)="sound.toggleMute()">
+        <i class="fa-solid" [class.fa-volume-high]="!sound.muted" [class.fa-volume-xmark]="sound.muted"></i>
+      </button>
     </div>
 
     <div class="timer-panel">
@@ -15,7 +17,9 @@
       </p>
     </div>
 
-    <button class="standings-toggle" (click)="showStandings = !showStandings">🏆</button>
+    <button class="standings-toggle" (click)="showStandings = !showStandings">
+      <i class="fa-solid fa-trophy"></i>
+    </button>
 
     @if (showStandings) {
       <aside class="standings-panel">
@@ -31,10 +35,10 @@
     }
 
     <button class="touch-btn jump-btn" (pointerdown)="pressJump()" (pointerup)="releaseJump()">
-      <span>⬆</span><small>JUMP</small>
+      <i class="fa-solid fa-arrow-up"></i><small>JUMP</small>
     </button>
     <button class="touch-btn duck-btn" (pointerdown)="pressDuck()" (pointerup)="releaseDuck()">
-      <span>⬇</span><small>SLIDE</small>
+      <i class="fa-solid fa-arrow-down"></i><small>SLIDE</small>
     </button>
   </div>
 </div>

@@ -134,4 +134,19 @@ export class Lobby implements OnInit, OnDestroy {
       this.inviteStatus = 'Could not send invite.';
     }
   }
+  shareMatch() {
+    const shareText = `Join my Dino Runner race! Code: ${this.matchId}`;
+    if (navigator.share) {
+      navigator.share({ title: 'Dino Runner', text: shareText }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareText);
+      this.sound.play(500);
+    }
+  }
+
+  shareViaEmail() {
+    const subject = encodeURIComponent('Join my Dino Runner race!');
+    const body = encodeURIComponent(`Come race me! Use this code to join: ${this.matchId}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  }
 }

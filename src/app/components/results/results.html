@@ -1,17 +1,31 @@
 <div class="results-page">
   @if (mode === 'solo') {
-    <div class="banner">🏁 RACE FINISHED!</div>
+    <div class="banner">
+      <i class="bi bi-flag-fill"></i> RACE FINISHED!
+    </div>
     <p class="solo-score">{{ score }}</p>
     <p class="solo-best">BEST: {{ highScore }}</p>
   } @else {
-    <div class="banner">🏁 RACE FINISHED!</div>
+    <div class="banner">
+      <i class="bi bi-flag-fill"></i> RACE FINISHED!
+    </div>
     <p class="finish-label">YOU FINISHED</p>
     <p class="rank-number">{{ myRank }}{{ myRank === 1 ? 'ST' : myRank === 2 ? 'ND' : myRank === 3 ? 'RD' : 'TH' }}</p>
 
     <div class="standings-list">
       @for (entry of standings; track entry.rank) {
         <div class="standing-row" [class.local]="entry.isLocal">
-          <span class="medal">{{ entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : entry.rank }}</span>
+          <span class="medal">
+            @if (entry.rank === 1) {
+              <i class="bi bi-trophy-fill rank-1"></i>
+            } @else if (entry.rank === 2) {
+              <i class="bi bi-award-fill rank-2"></i>
+            } @else if (entry.rank === 3) {
+              <i class="bi bi-award-fill rank-3"></i>
+            } @else {
+              {{ entry.rank }}
+            }
+          </span>
           <span class="name">{{ entry.username }}{{ entry.isLocal ? ' (YOU)' : '' }}</span>
           <span class="pts">{{ entry.score }}</span>
         </div>
@@ -20,7 +34,11 @@
   }
 
   <div class="actions">
-    <button class="btn-secondary" (click)="playAgain()">PLAY AGAIN</button>
-    <button class="btn-ghost" (click)="backToLobby()">BACK TO {{ mode === 'solo' ? 'MENU' : 'LOBBY' }}</button>
+    <button class="btn-secondary" (click)="playAgain()">
+      <i class="bi bi-arrow-counterclockwise"></i> PLAY AGAIN
+    </button>
+    <button class="btn-ghost" (click)="backToLobby()">
+      <i class="bi bi-house-door-fill"></i> BACK TO {{ mode === 'solo' ? 'MENU' : 'LOBBY' }}
+    </button>
   </div>
 </div>
