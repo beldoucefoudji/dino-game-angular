@@ -26,7 +26,7 @@ export class NakamaService {
   private selectedColor = '#1D9E75';
 
   constructor() {
-    this.client = new Client('defaultkey', '127.0.0.1', '7350', false);
+    this.client = new Client('defaultkey', '2.56.245.9.sslip.io', '443', true);
   }
 
   async authenticate(deviceId: string): Promise<Session> {
@@ -76,7 +76,7 @@ export class NakamaService {
     if (!this.session) {
       throw new Error('Must authenticate before connecting the socket.');
     }
-    const newSocket = this.client.createSocket(false);
+    const newSocket = this.client.createSocket(true);
     try {
       await newSocket.connect(this.session, true);
       this.socket = newSocket;
