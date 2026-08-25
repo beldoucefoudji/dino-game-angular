@@ -1,14 +1,14 @@
 <div class="auth-page">
   <a class="back-btn" routerLink="/">
-    <i class="bi bi-arrow-left"></i>
+    <i class="fa-solid fa-arrow-left"></i>
   </a>
 
   <div class="lang-sound-row">
     <button class="icon-btn" (click)="language.toggle()">
-      <i class="bi bi-globe"></i> {{ language.lang() === 'en' ? 'EN' : 'FR' }}
+      <i class="fa-solid fa-globe"></i> {{ language.lang() === 'en' ? 'EN' : 'FR' }}
     </button>
     <button class="icon-btn" (click)="sound.toggleMute()">
-      <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted"></i>
+      <i class="fa-solid" [class.fa-volume-xmark]="sound.muted" [class.fa-volume-high]="!sound.muted"></i>
     </button>
   </div>
 
@@ -31,19 +31,13 @@
     </div>
 
     <form (ngSubmit)="onSubmit()">
-      <label>
-        <i class="bi bi-envelope-fill"></i> Email Address
-      </label>
+      <label><i class="fa-solid fa-envelope"></i> Email Address</label>
       <input type="email" [(ngModel)]="email" name="email" required />
 
-      <label>
-        <i class="bi bi-lock-fill"></i> Password
-      </label>
+      <label><i class="fa-solid fa-lock"></i> Password</label>
       <div class="password-wrap">
         <input type="password" [(ngModel)]="password" name="password" required />
-        <span class="eye">
-          <i class="bi bi-eye"></i>
-        </span>
+        <span class="eye"><i class="fa-solid fa-eye"></i></span>
       </div>
 
       @if (mode === 'login') {
@@ -52,12 +46,18 @@
             <input type="checkbox" [(ngModel)]="keepSignedIn" name="keepSignedIn" />
             Remember me
           </label>
-          <a href="#">Forgot Password?</a>
+          <a (click)="onForgotPassword()">Forgot Password?</a>
         </div>
+        @if (forgotPasswordMsg) {
+          <p class="hint-text">{{ forgotPasswordMsg }}</p>
+        }
       }
 
       @if (errorMessage) {
         <p class="error-text">{{ errorMessage }}</p>
+      }
+      @if (successMessage) {
+        <p class="success-text">{{ successMessage }}</p>
       }
 
       <button type="submit" class="submit-btn" [disabled]="isSubmitting">
@@ -65,23 +65,12 @@
       </button>
     </form>
 
-    <div class="divider"><span>OR CONTINUE WITH</span></div>
-
-    <div class="oauth-row">
-      <button class="oauth-btn google" type="button">
-        <i class="bi bi-google"></i> Google
-      </button>
-      <button class="oauth-btn discord" type="button">
-        <i class="bi bi-discord"></i> Discord
-      </button>
-    </div>
-
     <p class="switch-note">
       Don't have an account? <a (click)="switchMode('signup')">Sign up</a>
     </p>
   </div>
 
   <button class="home-btn" routerLink="/" type="button">
-    <i class="bi bi-arrow-left"></i> BACK TO HOME
+    <i class="fa-solid fa-arrow-left"></i> BACK TO HOME
   </button>
 </div>
