@@ -28,6 +28,7 @@ export class NakamaService {
   constructor() {
     this.client = new Client('defaultkey', 'nakama.nkulex.com', '443', true);
     
+    
   }
 
   async authenticate(deviceId: string): Promise<Session> {
@@ -35,10 +36,37 @@ export class NakamaService {
     return this.session;
   }
 
-  async authenticateEmail(email: string, password: string, create: boolean): Promise<Session> {
-    this.session = await this.client.authenticateEmail(email, password, create);
-    return this.session;
+  async authenticateEmail(
+  email: string,
+  password: string,
+  create: boolean
+): Promise<Session> {
+  console.log('Nakama authentication started:', {
+    email,
+    create
+  });
+
+  try {
+    const session = await this.client.authenticateEmail(
+      email,
+      password,
+      create
+    );
+
+    console.log('Nakama authentication successful:', {
+      userId: session.user_id,
+      username: session.username
+    });
+
+    this.session = session;
+
+    return session;
+
+  } catch (error) {
+    console.error('Nakama authenticateEmail failed:', error);
+    throw error;
   }
+}
 
   isAuthenticated(): boolean {
     return this.session !== null;
