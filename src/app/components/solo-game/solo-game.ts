@@ -21,7 +21,7 @@ export class SoloGame implements AfterViewInit, OnDestroy {
   private animationFrameId = 0;
 
   private keys: Record<string, boolean> = {};
-
+     private obstaclePassed = false;
   score = 0;
   highScore = 0;
   isGameOver = false;
@@ -122,11 +122,8 @@ export class SoloGame implements AfterViewInit, OnDestroy {
     this.draw(timestamp);
   };
 
-  private update(deltaTime: number, timestamp: number) {
+    private update(deltaTime: number, timestamp: number) {
     if (this.isGameOver) return;
-    this.score += deltaTime * 0.01;
-    this.coins = Math.floor(this.score / 50);
-    this.distancePercent = (this.score % 100);
 
     const elapsed = timestamp - this.matchStartTime;
     this.speedTier = Math.min(1 + Math.floor(elapsed / 20000), 5);
@@ -158,23 +155,34 @@ export class SoloGame implements AfterViewInit, OnDestroy {
       }
     }
 
+    const obsWidth = this.obstacleType === 'cactus' ? 22 : 24;
     this.obstacleX -= speed;
+
+    // obstacle fully cleared the dino's leading edge (x = 50) — count it once
+    if (!this.obstaclePassed && this.obstacleX + obsWidth < 50) {
+      this.obstaclePassed = true;
+      this.score += 1;
+      this.coins += 1;
+    }
+
     if (this.obstacleX < -50) {
       this.obstacleX = this.resetX;
       this.obstacleType = Math.random() < 0.5 ? 'cactus' : 'bird';
+      this.obstaclePassed = false; // reset for the new obstacle
     }
 
     if (!isProtected) {
       const dinoHeight = this.isDucking ? 40 : 64;
       const dinoDrawY = this.isDucking ? this.dinoY + (64 - dinoHeight) : this.dinoY;
-      const obsY = this.obstacleType === 'cactus' ? this.groundY + 14 : this.groundY - 10;
-      const obsW = this.obstacleType === 'cactus' ? 22 : 24;
+
+      // bird now sits clearly above running-height, with generous duck clearance
+      const obsY = this.obstacleType === 'cactus' ? this.groundY + 14 : this.groundY - 26;
       const obsH = this.obstacleType === 'cactus' ? 40 : 14;
 
       const dx = 50 + this.HIT_MARGIN, dy = dinoDrawY + this.HIT_MARGIN;
       const dw = 64 - this.HIT_MARGIN * 2, dh = dinoHeight - this.HIT_MARGIN * 2;
       const ox = this.obstacleX + this.OBS_MARGIN, oy = obsY + this.OBS_MARGIN;
-      const ow = obsW - this.OBS_MARGIN * 2, oh = obsH - this.OBS_MARGIN * 2;
+      const ow = obsWidth - this.OBS_MARGIN * 2, oh = obsH - this.OBS_MARGIN * 2;
 
       if (this.isColliding(dx, dy, dw, dh, ox, oy, ow, oh)) {
         this.sound.play(220, 0.15);
@@ -184,6 +192,8 @@ export class SoloGame implements AfterViewInit, OnDestroy {
           this.sound.play(180, 0.2);
           if (this.score > this.highScore) this.highScore = this.score;
           if (this.nakama.isAuthenticated()) this.nakama.submitScore('dino_solo', this.score);
+          this.nakama.lastResult = { mode: 'solo', score: this.score, highScore: this.highScore };
+          setTimeout(() => this.router.navigate(['/results']), 1200);
         } else {
           this.freezeUntil = timestamp + 1000;
           this.protectedUntil = timestamp + 1000 + 1500;
@@ -191,7 +201,6 @@ export class SoloGame implements AfterViewInit, OnDestroy {
       }
     }
   }
-
   private isColliding(x1: number, y1: number, w1: number, h1: number, x2: number, y2: number, w2: number, h2: number) {
     return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
   }

@@ -26,7 +26,8 @@ export class NakamaService {
   private selectedColor = '#1D9E75';
 
   constructor() {
-    this.client = new Client('defaultkey', '2.56.245.9.sslip.io', '443', true);
+    this.client = new Client('defaultkey', 'nakama.nkulex.com', '443', true);
+    
   }
 
   async authenticate(deviceId: string): Promise<Session> {
@@ -81,7 +82,7 @@ export class NakamaService {
       await newSocket.connect(this.session, true);
       this.socket = newSocket;
     } catch (error) {
-      this.socket = null; // don't leave a half-connected socket lying around
+      this.socket = null; 
       throw error;
     }
   }
