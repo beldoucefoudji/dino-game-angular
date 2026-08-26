@@ -26,7 +26,8 @@ export class NakamaService {
   private selectedColor = '#1D9E75';
 
   constructor() {
-    this.client = new Client('defaultkey', 'nakama.nkulex.com', '443', true);
+    this.client = new Client('defaultkey', 'nakama.nkulex.com', '443', true, 30000);
+    
     
     
   }
