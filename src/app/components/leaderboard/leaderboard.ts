@@ -51,4 +51,7 @@ export class Leaderboard implements OnInit {
   switchTab(tab: 'global' | 'weekly' | 'friends') {
     this.activeTab = tab;
   }
+    goBack() {
+    this.router.navigate(['/']);
+  }
 }

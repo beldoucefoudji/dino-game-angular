@@ -244,7 +244,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     }
 
     if (!me.eliminated) {
-      me.score += deltaTime * 0.01;
+      //me.score += deltaTime * 0.01;
       const isFrozen = timestamp < me.freezeUntil;
       const isProtected = timestamp < me.protectedUntil;
 

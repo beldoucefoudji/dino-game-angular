@@ -245,12 +245,11 @@ export class SoloGame implements AfterViewInit, OnDestroy {
     else if (this.isDucking) { sx = this.frameIndex === 1 ? 4 * this.SW : 5 * this.SW; drawHeight = 40; drawY = this.dinoY + (64 - drawHeight); }
     else sx = this.frameIndex * this.SW;
 
-    if (this.obstacleType === 'cactus') {
+        if (this.obstacleType === 'cactus') {
       this.ctx.drawImage(this.cactusSprite, this.obstacleX, this.groundY + 14, 22, 40);
     } else {
-      this.ctx.drawImage(this.birdSprite, this.obstacleX, this.groundY - 10, 24, 14);
+      this.ctx.drawImage(this.birdSprite, this.obstacleX, this.groundY - 26, 24, 14);
     }
-
     const isProtected = timestamp < this.protectedUntil && timestamp >= this.freezeUntil;
     this.ctx.globalAlpha = isProtected ? (Math.floor(timestamp / 100) % 2 === 0 ? 1 : 0.35) : 1;
     this.ctx.drawImage(this.dinoSprite, sx, 0, this.SW, this.SH, 50, drawY, 64, drawHeight);

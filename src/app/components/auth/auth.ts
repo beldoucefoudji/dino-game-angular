@@ -136,22 +136,23 @@ export class Auth {
 
     
       if (createAccount) {
-        this.successMessage =
-          'Account created successfully! Please log in.';
+  console.log('✅ SIGNUP SUCCESS - reached signup branch');
 
-        // Wait 3 seconds, then switch to login
-        setTimeout(() => {
-          this.mode = 'login';
+  this.successMessage = 'Account created successfully! Please log in.';
 
-          // Clear password for security
-          this.password = '';
+  console.log('✅ successMessage:', this.successMessage);
+  console.log('✅ isSubmitting BEFORE:', this.isSubmitting);
 
-          // Clear success message
-          this.successMessage = '';
-        }, 3000);
+  setTimeout(() => {
+    console.log('✅ Switching to login');
 
-        return;
-      }
+    this.mode = 'login';
+    this.password = '';
+    this.successMessage = '';
+  }, 3000);
+
+  return;
+}
 
       
       else {

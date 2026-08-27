@@ -59,6 +59,7 @@
       @if (successMessage) {
         <p class="success-text">{{ successMessage }}</p>
       }
+  
 
       <button type="submit" class="submit-btn" [disabled]="isSubmitting">
         {{ isSubmitting ? '...' : (mode === 'login' ? t('submitLogin') : t('submitSignup')) }}

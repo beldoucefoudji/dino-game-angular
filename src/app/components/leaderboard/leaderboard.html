@@ -1,40 +1,45 @@
-<div class="leaderboard-page">
-  <a class="back-btn" routerLink="/">
-    <i class="bi bi-arrow-left"></i>
-  </a>
-  <h1><i class="bi bi-trophy-fill"></i> Leaderboard</h1>
+<div class="leaderboard-page" (click)="goBack()">
+  <div class="leaderboard-modal" (click)="$event.stopPropagation()">
 
-  <div class="tabs">
-    <button class="tab" [class.active]="activeTab === 'global'" (click)="switchTab('global')">GLOBAL</button>
-    <button class="tab" [class.active]="activeTab === 'weekly'" (click)="switchTab('weekly')">WEEKLY</button>
-    <button class="tab" [class.active]="activeTab === 'friends'" (click)="switchTab('friends')">FRIENDS</button>
-  </div>
+    <button class="btn-ghost" (click)="goBack()">
+      <i class="bi bi-arrow-left"></i> Back
+    </button>
 
-  @if (loading) {
-    <p class="muted">Loading...</p>
-  } @else if (loadError) {
-    <p class="muted error-text">{{ loadError }}</p>
-  } @else if (!entries.length) {
-    <p class="muted">No scores yet — be the first to play!</p>
-  } @else {
-    <div class="board">
-      @for (entry of entries; track entry.rank) {
-        <div class="board-row" [class.local]="entry.userId === myUserId">
-          <span class="rank">
-            @if (entry.rank === 1) {
-              <i class="bi bi-trophy-fill rank-1"></i>
-            } @else if (entry.rank === 2) {
-              <i class="bi bi-award-fill rank-2"></i>
-            } @else if (entry.rank === 3) {
-              <i class="bi bi-award-fill rank-3"></i>
-            } @else {
-              {{ entry.rank }}
-            }
-          </span>
-          <span class="name">{{ entry.username }}</span>
-          <span class="score">{{ entry.score }}</span>
-        </div>
-      }
+    <h1><i class="bi bi-trophy-fill"></i> Leaderboard</h1>
+
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab === 'global'" (click)="switchTab('global')">GLOBAL</button>
+      <button class="tab" [class.active]="activeTab === 'weekly'" (click)="switchTab('weekly')">WEEKLY</button>
+      <button class="tab" [class.active]="activeTab === 'friends'" (click)="switchTab('friends')">FRIENDS</button>
     </div>
-  }
+
+    @if (loading) {
+      <p class="muted">Loading...</p>
+    } @else if (loadError) {
+      <p class="muted error-text">{{ loadError }}</p>
+    } @else if (!entries.length) {
+      <p class="muted">No scores yet — be the first to play!</p>
+    } @else {
+      <div class="board">
+        @for (entry of entries; track entry.rank) {
+          <div class="board-row" [class.local]="entry.userId === myUserId">
+            <span class="rank">
+              @if (entry.rank === 1) {
+                <i class="bi bi-trophy-fill rank-1"></i>
+              } @else if (entry.rank === 2) {
+                <i class="bi bi-award-fill rank-2"></i>
+              } @else if (entry.rank === 3) {
+                <i class="bi bi-award-fill rank-3"></i>
+              } @else {
+                {{ entry.rank }}
+              }
+            </span>
+            <span class="name">{{ entry.username }}</span>
+            <span class="score">{{ entry.score }}</span>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
 </div>
