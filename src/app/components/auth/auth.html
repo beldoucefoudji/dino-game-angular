@@ -34,6 +34,11 @@
       <label><i class="fa-solid fa-envelope"></i> Email Address</label>
       <input type="email" [(ngModel)]="email" name="email" required />
 
+      @if (mode === 'signup') {
+  <label><i class="fa-solid fa-user"></i> {{ t('username') }}</label>
+  <input type="text" [(ngModel)]="username" name="username" required />
+}
+
       <label><i class="fa-solid fa-lock"></i> Password</label>
       <div class="password-wrap">
         <input type="password" [(ngModel)]="password" name="password" required />
@@ -42,10 +47,7 @@
 
       @if (mode === 'login') {
         <div class="options-row">
-          <label class="checkbox-label">
-            <input type="checkbox" [(ngModel)]="keepSignedIn" name="keepSignedIn" />
-            Remember me
-          </label>
+          
           <a (click)="onForgotPassword()">Forgot Password?</a>
         </div>
         @if (forgotPasswordMsg) {

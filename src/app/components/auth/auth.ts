@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { NakamaService } from '../../services/nakama';
 import { LanguageService } from '../../services/language';
 import { SoundService } from '../../services/sound';
-
+import {  ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'app-auth',
   imports: [FormsModule, RouterLink],
@@ -16,6 +16,7 @@ export class Auth {
 
   email = '';
   password = '';
+  username = '';
   keepSignedIn = false;
 
   isSubmitting = false;
@@ -30,6 +31,7 @@ export class Auth {
       login: 'Login',
       signup: 'Sign up',
       email: 'Email',
+      username: 'Username',
       password: 'Password',
       keep: 'Remember me',
       forgot: 'Forgot Password?',
@@ -45,6 +47,7 @@ export class Auth {
       login: 'Connexion',
       signup: "S'inscrire",
       email: 'E-mail',
+      username: "Nom d'utilisateur",
       password: 'Mot de passe',
       keep: 'Se souvenir de moi',
       forgot: 'Mot de passe oublié ?',
@@ -59,6 +62,7 @@ export class Auth {
   constructor(
     private nakama: NakamaService,
     private router: Router,
+     private cdr: ChangeDetectorRef,
     public language: LanguageService,
     public sound: SoundService
   ) {}
@@ -89,6 +93,10 @@ export class Auth {
   private validate(): string | null {
     const email = this.email.trim();
     const password = this.password.trim();
+
+    if (this.mode === 'signup' && !this.username.trim()) {
+      return 'Please choose a username.';
+    }
 
     if (!email || !password) {
       return 'Please fill in both email and password.';
@@ -128,33 +136,29 @@ export class Auth {
       await this.nakama.authenticateEmail(
         this.email.trim(),
         this.password.trim(),
-        createAccount
+        createAccount,
+        createAccount ? this.username.trim() : undefined
       );
 
       // Success sound
       this.sound.play(600, 0.12);
 
-    
-      if (createAccount) {
-  console.log('✅ SIGNUP SUCCESS - reached signup branch');
 
-  this.successMessage = 'Account created successfully! Please log in.';
+           if (createAccount) {
+        this.successMessage = 'Account created successfully! Please log in.';
+        this.cdr.detectChanges();
 
-  console.log('✅ successMessage:', this.successMessage);
-  console.log('✅ isSubmitting BEFORE:', this.isSubmitting);
+        setTimeout(() => {
+          this.mode = 'login';
+          this.password = '';
+          this.successMessage = '';
+          this.cdr.detectChanges();
+        }, 1000);
 
-  setTimeout(() => {
-    console.log('✅ Switching to login');
+        return;
+      }
 
-    this.mode = 'login';
-    this.password = '';
-    this.successMessage = '';
-  }, 3000);
 
-  return;
-}
-
-      
       else {
         this.sound.startMusic('/theme.mp3');
 

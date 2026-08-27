@@ -30,7 +30,7 @@
 
   <div class="join-block" (click)="$event.stopPropagation()">
     <input type="text" [placeholder]="t('join')" [(ngModel)]="joinCode" />
-    <button class="btn-secondary" (click)="joinMatch()">
+    <button class="btn-secondary" (click)="openJoinSetup()">
       <i class="bi bi-box-arrow-in-right"></i> {{ t('go') }}
     </button>
   </div>
@@ -47,14 +47,16 @@
         <label>{{ t('username') }}</label>
         <input type="text" [(ngModel)]="matchUsername" />
 
-        <label>{{ t('players') }}</label>
-        <select [(ngModel)]="maxPlayers">
-          <option [value]="2">2</option>
-          <option [value]="3">3</option>
-          <option [value]="4">4</option>
-          <option [value]="6">6</option>
-          <option [value]="8">8</option>
-        </select>
+        @if (multiplayerAction === 'create') {
+          <label>{{ t('players') }}</label>
+          <select [(ngModel)]="maxPlayers">
+            <option [value]="2">2</option>
+            <option [value]="3">3</option>
+            <option [value]="4">4</option>
+            <option [value]="6">6</option>
+            <option [value]="8">8</option>
+          </select>
+        }
 
         <div class="modal-actions">
           <button class="btn-ghost" (click)="cancelMultiplayerSetup()">

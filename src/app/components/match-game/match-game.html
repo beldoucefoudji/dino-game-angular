@@ -15,6 +15,11 @@
       <p class="timer-value" [class.danger]="isSuddenDeath">
         {{ isSuddenDeath ? 'SUDDEN DEATH' : displaySecondsLeft + 's' }}
       </p>
+      <div class="speed-bar">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <span class="speed-seg" [class.filled]="i <= speedTier"></span>
+        }
+      </div>
     </div>
 
     <button class="standings-toggle" (click)="showStandings = !showStandings">
@@ -28,7 +33,7 @@
           <div class="standing-row" [class.local]="entry.isLocal" [class.out]="entry.eliminated">
             <span class="standing-rank">{{ i + 1 }}</span>
             <span class="standing-name">{{ entry.username }}{{ entry.isLocal ? ' (you)' : '' }}</span>
-            <span class="standing-score">{{ entry.score }}</span>
+            <span class="standing-score">{{ entry.score }}pt</span>
           </div>
         }
       </aside>

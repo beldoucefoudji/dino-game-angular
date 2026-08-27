@@ -54,8 +54,8 @@ export class SoloGame implements AfterViewInit, OnDestroy {
   private matchStartTime = 0;
 
   private lastTimestamp = 0;
-  private readonly SW = 100;
-  private readonly SH = 90;
+   private readonly SW = 64;
+  private readonly SH = 64;
   private readonly HIT_MARGIN = 14;
   private readonly OBS_MARGIN = 4;
 
@@ -70,7 +70,7 @@ export class SoloGame implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     const canvas = this.canvasRef.nativeElement;
     this.ctx = canvas.getContext('2d')!;
-    this.dinoSprite.src = '/dino-pixel-sprite-v2.png';
+    this.dinoSprite.src = '/dino-sprite.png';
     this.cactusSprite.src = '/cactus-pixel.png';
     this.birdSprite.src = '/bird-pixel.png';
     this.username = this.nakama.getUsername() ?? 'Guest';

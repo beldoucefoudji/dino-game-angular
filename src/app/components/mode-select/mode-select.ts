@@ -20,6 +20,7 @@ export class ModeSelect {
   showMultiplayerModal = false;
   matchUsername = '';
   maxPlayers = 4;
+  multiplayerAction: 'create' | 'join' = 'create';
 
   private translations = {
     en: {
@@ -65,6 +66,21 @@ export class ModeSelect {
     }
     this.sound.play(500);
     this.matchUsername = this.nakama.getUsername() ?? '';
+    this.multiplayerAction = 'create';
+    this.showMultiplayerModal = true;
+  }
+
+  openJoinSetup() {
+    if (!this.nakama.isAuthenticated()) {
+      this.connectError = this.t('loginNeeded');
+      this.sound.play(200, 0.15);
+      setTimeout(() => this.router.navigate(['/auth']), 900);
+      return;
+    }
+    if (!this.joinCode.trim()) return;
+    this.sound.play(500);
+    this.matchUsername = this.nakama.getUsername() ?? '';
+    this.multiplayerAction = 'join';
     this.showMultiplayerModal = true;
   }
 
@@ -79,34 +95,20 @@ export class ModeSelect {
     this.isConnecting = true;
     this.connectError = '';
     try {
-      await this.nakama.ensureSocketConnected();
-      const matchId = await this.nakama.createMatch();
-      this.router.navigate(['/lobby', matchId]);
-    } catch (error) {
-      console.error('Failed to create match:', error);
-      this.connectError = 'Could not connect. Is the Nakama server running?';
-    } finally {
-      this.isConnecting = false;
-    }
-  }
+            if (this.matchUsername.trim()) {
+        await this.nakama.updateUsername(this.matchUsername.trim());
+      }
+      await this.nakama.ensureSocketConnected(true); // force fresh socket so presence reflects the new name
+      const matchId = this.multiplayerAction === 'create'
+        ? await this.nakama.createMatch()
+        : await this.nakama.joinMatch(this.joinCode.trim());
 
-  async joinMatch() {
-    if (!this.joinCode.trim()) return;
-    if (!this.nakama.isAuthenticated()) {
-      this.connectError = this.t('loginNeeded');
-      setTimeout(() => this.router.navigate(['/auth']), 900);
-      return;
-    }
-    this.sound.play(500);
-    this.isConnecting = true;
-    this.connectError = '';
-    try {
-      await this.nakama.ensureSocketConnected();
-      const matchId = await this.nakama.joinMatch(this.joinCode.trim());
       this.router.navigate(['/lobby', matchId]);
     } catch (error) {
-      console.error('Failed to join match:', error);
-      this.connectError = 'Could not join. Check the code and try again.';
+      console.error('Multiplayer setup failed:', error);
+      this.connectError = this.multiplayerAction === 'create'
+        ? 'Could not connect. Is the Nakama server running?'
+        : 'Could not join. Check the code and try again.';
     } finally {
       this.isConnecting = false;
     }
