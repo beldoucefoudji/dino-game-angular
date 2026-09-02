@@ -95,10 +95,11 @@ export class ModeSelect {
     this.isConnecting = true;
     this.connectError = '';
     try {
-            if (this.matchUsername.trim()) {
-        await this.nakama.updateUsername(this.matchUsername.trim());
+      if (this.matchUsername.trim()) {
+        await this.nakama.updateUsernameAndRefresh(this.matchUsername.trim());
+      } else {
+        await this.nakama.ensureSocketConnected(true);
       }
-      await this.nakama.ensureSocketConnected(true); // force fresh socket so presence reflects the new name
       const matchId = this.multiplayerAction === 'create'
         ? await this.nakama.createMatch()
         : await this.nakama.joinMatch(this.joinCode.trim());
@@ -112,5 +113,5 @@ export class ModeSelect {
     } finally {
       this.isConnecting = false;
     }
-  }
+}
 }
