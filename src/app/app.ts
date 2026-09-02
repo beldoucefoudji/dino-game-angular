@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './services/theme';
 import { SoundService } from './services/sound';
+import { MusicService } from './services/music.service';
 
 @Component({
   selector: 'app-root',
@@ -14,14 +15,13 @@ export class App implements OnInit {
   protected title = 'dino-game-angular';
 
   constructor(
-    private themeService: ThemeService, 
-    private sound: SoundService
-  ) {} 
+    private themeService: ThemeService,
+    private sound: SoundService,
+    private music: MusicService
+  ) {}
 
   ngOnInit(): void {
     this.themeService.initializeTheme();
-    
-    
-    this.sound.startMusic('/theme1.mp3'); 
+    this.music.init();
   }
 }
