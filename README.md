@@ -1,59 +1,28 @@
-# DinoGameAngular
+# Dino Runner
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.1.
+Angular canvas runner with solo play, Nakama multiplayer lobbies, profiles, and leaderboards.
 
-## Development server
+## Run locally
 
-To start a local development server, run:
+Install dependencies with npm ci, then run npm start and open http://localhost:4200.
 
-```bash
-ng serve
-```
+- npm test -- --watch=false: run the regression suite (backend and audio are mocked in component tests).
+- npm run build: create the production bundle under dist/dino-game-angular.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Game rules
 
-## Code scaffolding
+- Up arrow / Jump button: jump. Down arrow / Duck button: duck.
+- Solo: three lives, one point and one coin per passed obstacle, increasing speed every 20 seconds (five tiers).
+- Multiplayer: four lives, seeded obstacles, one point per passed obstacle, increasing speed every 30 seconds, sudden death after three minutes of game simulation.
+- Fixed 60 Hz simulation keeps ordinary gameplay consistent across render refresh rates. Catch-up is capped after long stalls; this is not server-authoritative multiplayer synchronization.
+- Solo pause stops simulation time. Restart cancels the pending results redirect and clears transient state.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Layout and backend
 
-```bash
-ng generate component component-name
-```
+Shared desktop, portrait, and landscape adjustments are in src/responsive.css. The canvas preserves its proportions, controls support pointer cancellation, and dialogs can scroll on short screens.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The client currently connects to the Nakama host configured in src/app/services/nakama.ts. The Docker files under server are a starting point; the checked-in Lua module is empty. Live invitations, coin awards, and leaderboard availability depend on the deployed server configuration. Weekly/friends rankings are marked unavailable until supported.
 
-```bash
-ng generate --help
-```
+Profile details are stored in Nakama storage and account fields. Test profile persistence and multiplayer with a configured backend before deployment. Component tests do not verify the live service.
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Saved webpage files under public/theme1_files are excluded from build assets.

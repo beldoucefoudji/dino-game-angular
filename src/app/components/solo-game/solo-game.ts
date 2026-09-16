@@ -1,4 +1,5 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, NgZone, HostListener } from '@angular/core';
+import { GameClock } from '../../services/game-clock';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, NgZone, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { NakamaService } from '../../services/nakama';
 import { LanguageService } from '../../services/language';
@@ -22,14 +23,15 @@ export class SoloGame implements AfterViewInit, OnDestroy {
 
   private keys: Record<string, boolean> = {};
      private obstaclePassed = false;
+  private obstacleHit = false;
   score = 0;
-  highScore = 0;
+  highScore = Math.max(0, Number(localStorage.getItem('dino-solo-best')) || 0);
   isGameOver = false;
   isPaused = false;
   lives = 3;
   coins = 0;
   speedTier = 1;
-  distancePercent = 0;
+  distance = 0;
   username = 'Guest';
 
   private isJumping = false;
@@ -53,7 +55,9 @@ export class SoloGame implements AfterViewInit, OnDestroy {
   private readonly resetX = 1200;
   private matchStartTime = 0;
 
-  private lastTimestamp = 0;
+  private clock = new GameClock();
+  private lastUiUpdate = 0;
+  private resultsTimer?: ReturnType<typeof setTimeout>;
    private readonly SW = 64;
   private readonly SH = 64;
   private readonly HIT_MARGIN = 14;
@@ -62,6 +66,7 @@ export class SoloGame implements AfterViewInit, OnDestroy {
   constructor(
     private router: Router,
     private ngZone: NgZone,
+    private cdr: ChangeDetectorRef,
     private nakama: NakamaService,
     public language: LanguageService,
     public sound: SoundService
@@ -74,7 +79,7 @@ export class SoloGame implements AfterViewInit, OnDestroy {
     this.cactusSprite.src = '/cactus-pixel.png';
     this.birdSprite.src = '/bird-pixel.png';
     this.username = this.nakama.getUsername() ?? 'Guest';
-    this.matchStartTime = performance.now();
+    this.matchStartTime = 0;
 
     this.ngZone.runOutsideAngular(() => {
       this.animationFrameId = requestAnimationFrame(this.gameLoop);
@@ -83,6 +88,7 @@ export class SoloGame implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     cancelAnimationFrame(this.animationFrameId);
+    clearTimeout(this.resultsTimer);
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -94,14 +100,47 @@ export class SoloGame implements AfterViewInit, OnDestroy {
   @HostListener('window:keyup', ['$event'])
   onKeyUp(e: KeyboardEvent) { this.keys[e.code] = false; }
 
+  captureControl(event: PointerEvent, action: 'jump' | 'duck') {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    if (action === 'jump') this.pressJump(); else this.pressDuck();
+  }
+
   pressJump() { this.keys['ArrowUp'] = true; }
   releaseJump() { this.keys['ArrowUp'] = false; }
   pressDuck() { this.keys['ArrowDown'] = true; }
   releaseDuck() { this.keys['ArrowDown'] = false; }
 
-  togglePause() { this.sound.play(400); this.isPaused = !this.isPaused; }
+  togglePause() {
+    if (this.isGameOver) return;
+    this.sound.play(400);
+    this.keys = {};
+    this.isPaused = !this.isPaused;
+  }
+
+  @HostListener('window:blur')
+  onBlur() { this.keys = {}; if (!this.isGameOver) this.isPaused = true; }
+
+  @HostListener('document:visibilitychange')
+  onVisibilityChange() { if (document.hidden) this.onBlur(); }
+
 
   restart() {
+    clearTimeout(this.resultsTimer);
+    this.clock.reset();
+    this.keys = {};
+    this.isPaused = false;
+    this.isJumping = false;
+    this.isDucking = false;
+    this.freezeUntil = 0;
+    this.protectedUntil = 0;
+    this.obstaclePassed = false;
+    this.obstacleHit = false;
+    this.obstacleType = 'cactus';
+    this.frameIndex = 1;
+    this.frameTimer = 0;
+    this.speedTier = 1;
+    this.distance = 0;
     this.isGameOver = false;
     this.dinoY = this.groundY;
     this.velocityY = 0;
@@ -109,17 +148,19 @@ export class SoloGame implements AfterViewInit, OnDestroy {
     this.score = 0;
     this.lives = 3;
     this.coins = 0;
-    this.matchStartTime = performance.now();
+    this.matchStartTime = 0;
   }
 
   onExit() { this.router.navigate(['/mode-select']); }
 
   private gameLoop = (timestamp: number) => {
     this.animationFrameId = requestAnimationFrame(this.gameLoop);
-    const deltaTime = timestamp - this.lastTimestamp;
-    this.lastTimestamp = timestamp;
-    if (!this.isPaused) this.update(deltaTime, timestamp);
-    this.draw(timestamp);
+    this.clock.advance(timestamp, this.isPaused || this.isGameOver, (step, time) => this.update(step, time));
+    this.draw(this.clock.time);
+    if (timestamp - this.lastUiUpdate >= 100) {
+      this.lastUiUpdate = timestamp;
+      this.cdr.markForCheck();
+    }
   };
 
     private update(deltaTime: number, timestamp: number) {
@@ -157,9 +198,10 @@ export class SoloGame implements AfterViewInit, OnDestroy {
 
     const obsWidth = this.obstacleType === 'cactus' ? 22 : 24;
     this.obstacleX -= speed;
+    this.distance += speed / 100;
 
     // obstacle fully cleared the dino's leading edge (x = 50) — count it once
-    if (!this.obstaclePassed && this.obstacleX + obsWidth < 50) {
+    if (!this.obstaclePassed && !this.obstacleHit && this.obstacleX + obsWidth < 50) {
       this.obstaclePassed = true;
       this.score += 1;
       this.coins += 1;
@@ -169,6 +211,7 @@ export class SoloGame implements AfterViewInit, OnDestroy {
       this.obstacleX = this.resetX;
       this.obstacleType = Math.random() < 0.5 ? 'cactus' : 'bird';
       this.obstaclePassed = false; // reset for the new obstacle
+      this.obstacleHit = false;
     }
 
     if (!isProtected) {
@@ -176,7 +219,7 @@ export class SoloGame implements AfterViewInit, OnDestroy {
       const dinoDrawY = this.isDucking ? this.dinoY + (64 - dinoHeight) : this.dinoY;
 
       // bird now sits clearly above running-height, with generous duck clearance
-      const obsY = this.obstacleType === 'cactus' ? this.groundY + 14 : this.groundY - 26;
+      const obsY = this.obstacleType === 'cactus' ? this.groundY + 14 : this.groundY + 20;
       const obsH = this.obstacleType === 'cactus' ? 40 : 14;
 
       const dx = 50 + this.HIT_MARGIN, dy = dinoDrawY + this.HIT_MARGIN;
@@ -185,15 +228,19 @@ export class SoloGame implements AfterViewInit, OnDestroy {
       const ow = obsWidth - this.OBS_MARGIN * 2, oh = obsH - this.OBS_MARGIN * 2;
 
       if (this.isColliding(dx, dy, dw, dh, ox, oy, ow, oh)) {
+        this.obstacleHit = true;
         this.sound.play(220, 0.15);
         this.lives -= 1;
         if (this.lives <= 0) {
           this.isGameOver = true;
           this.sound.play(180, 0.2);
-          if (this.score > this.highScore) this.highScore = this.score;
-          if (this.nakama.isAuthenticated()) this.nakama.submitScore('dino_solo', this.score);
+          if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem('dino-solo-best', String(this.highScore));
+          }
+          if (this.nakama.isAuthenticated()) void this.nakama.submitScore('dino_solo', this.score).catch(error => console.error('Score could not be saved', error));
           this.nakama.lastResult = { mode: 'solo', score: this.score, highScore: this.highScore };
-          setTimeout(() => this.router.navigate(['/results']), 1200);
+          this.resultsTimer = setTimeout(() => this.router.navigate(['/results']), 1200);
         } else {
           this.freezeUntil = timestamp + 1000;
           this.protectedUntil = timestamp + 1000 + 1500;
@@ -248,7 +295,7 @@ export class SoloGame implements AfterViewInit, OnDestroy {
         if (this.obstacleType === 'cactus') {
       this.ctx.drawImage(this.cactusSprite, this.obstacleX, this.groundY + 14, 22, 40);
     } else {
-      this.ctx.drawImage(this.birdSprite, this.obstacleX, this.groundY - 26, 24, 14);
+      this.ctx.drawImage(this.birdSprite, this.obstacleX, this.groundY + 20, 24, 14);
     }
     const isProtected = timestamp < this.protectedUntil && timestamp >= this.freezeUntil;
     this.ctx.globalAlpha = isProtected ? (Math.floor(timestamp / 100) % 2 === 0 ? 1 : 0.35) : 1;
@@ -261,7 +308,7 @@ export class SoloGame implements AfterViewInit, OnDestroy {
       this.ctx.fillStyle = '#eef2f6';
       this.ctx.font = 'bold 22px sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+      this.ctx.fillText(this.language.t('paused'), canvas.width / 2, canvas.height / 2);
     }
 
     if (this.isGameOver) {
@@ -270,10 +317,10 @@ export class SoloGame implements AfterViewInit, OnDestroy {
       this.ctx.fillStyle = '#ff5d6c';
       this.ctx.font = 'bold 26px sans-serif';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 10);
+      this.ctx.fillText(this.language.t('gameOver'), canvas.width / 2, canvas.height / 2 - 10);
       this.ctx.fillStyle = '#eef2f6';
       this.ctx.font = '14px sans-serif';
-      this.ctx.fillText('Press Enter to restart', canvas.width / 2, canvas.height / 2 + 20);
+      this.ctx.fillText(this.language.t('restartHint'), canvas.width / 2, canvas.height / 2 + 20);
     }
   }
 }

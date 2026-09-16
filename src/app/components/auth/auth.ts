@@ -17,7 +17,7 @@ export class Auth {
   email = '';
   password = '';
   username = '';
-  keepSignedIn = false;
+  showPassword = false;
 
   isSubmitting = false;
 
@@ -27,6 +27,8 @@ export class Auth {
 
   private translations = {
     en: {
+      emailPlaceholder: 'you@example.com', usernamePlaceholder: 'Choose your runner name',
+      passwordPlaceholder: 'Enter your password', signupPasswordPlaceholder: 'Create a password (8+ characters)',
       welcome: 'WELCOME BACK!',
       login: 'Login',
       signup: 'Sign up',
@@ -43,6 +45,8 @@ export class Auth {
     },
 
     fr: {
+      emailPlaceholder: 'vous@exemple.fr', usernamePlaceholder: 'Choisissez votre nom de joueur',
+      passwordPlaceholder: 'Saisissez votre mot de passe', signupPasswordPlaceholder: 'Cr\u00e9ez un mot de passe (8 caract\u00e8res minimum)',
       welcome: 'BON RETOUR !',
       login: 'Connexion',
       signup: "S'inscrire",
@@ -92,7 +96,7 @@ export class Auth {
 
   private validate(): string | null {
     const email = this.email.trim();
-    const password = this.password.trim();
+    const password = this.password;
 
     if (this.mode === 'signup' && !this.username.trim()) {
       return 'Please choose a username.';
@@ -135,7 +139,7 @@ export class Auth {
       // Authenticate with Nakama
       await this.nakama.authenticateEmail(
         this.email.trim(),
-        this.password.trim(),
+        this.password,
         createAccount,
         createAccount ? this.username.trim() : undefined
       );
@@ -160,7 +164,6 @@ export class Auth {
 
 
       else {
-        this.sound.startMusic('/theme.mp3');
 
         await this.router.navigate(['/mode-select']);
       }

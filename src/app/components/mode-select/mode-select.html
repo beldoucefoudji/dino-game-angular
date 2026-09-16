@@ -1,12 +1,12 @@
 <div class="mode-page">
-  <a class="back-btn" routerLink="/">
+  <a class="back-btn" [attr.aria-label]="language.t('back')" routerLink="/">
     <i class="bi bi-arrow-left"></i>
   </a>
   <div class="lang-sound-row">
-    <button class="icon-btn" (click)="language.toggle()">
+    <button class="icon-btn" [attr.aria-label]="language.t('changeLanguage')" (click)="language.toggle()">
       <i class="bi bi-globe"></i>
     </button>
-    <button class="icon-btn" (click)="sound.toggleMute()">
+    <button class="icon-btn" [attr.aria-label]="language.t(sound.muted ? 'unmute' : 'mute')" [attr.aria-pressed]="sound.muted" (click)="sound.toggleMute()">
       <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted"></i>
     </button>
   </div>
@@ -15,13 +15,13 @@
   <p class="sub">{{ t('sub') }}</p>
 
   <div class="mode-grid">
-    <div class="mode-card solo" (click)="playSolo()">
+    <div role="button" tabindex="0" class="mode-card solo" (click)="playSolo()" (keydown.enter)="playSolo()" (keydown.space)="$event.preventDefault(); playSolo()">
       <img src="/solo.avif" alt="Solo mode" class="mode-image" />
       <h3>{{ t('solo') }}</h3>
       <p>{{ t('soloDesc') }}</p>
     </div>
 
-    <div class="mode-card multi" (click)="openMultiplayerSetup()">
+    <div role="button" tabindex="0" class="mode-card multi" (click)="openMultiplayerSetup()" (keydown.enter)="openMultiplayerSetup()" (keydown.space)="$event.preventDefault(); openMultiplayerSetup()">
       <img src="/multi.avif" alt="Multiplayer mode" class="mode-image" />
       <h3>{{ t('multi') }}</h3>
       <p>{{ t('multiDesc') }}</p>

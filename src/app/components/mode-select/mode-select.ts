@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, inject, Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NakamaService } from '../../services/nakama';
@@ -12,6 +12,7 @@ import { SoundService } from '../../services/sound';
   styleUrl: './mode-select.css'
 })
 export class ModeSelect {
+  private readonly cdr = inject(ChangeDetectorRef);
   isConnecting = false;
   connectError = '';
   showJoinInput = false;
@@ -112,6 +113,7 @@ export class ModeSelect {
         : 'Could not join. Check the code and try again.';
     } finally {
       this.isConnecting = false;
+      this.cdr.markForCheck();
     }
 }
 }

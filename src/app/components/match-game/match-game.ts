@@ -1,10 +1,12 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
+import { GameClock } from '../../services/game-clock';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, NgZone } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NakamaService } from '../../services/nakama';
 import { LanguageService } from '../../services/language';
 import { SoundService } from '../../services/sound';
 
 interface RaceDino {
+  color: string;
   userId: string;
   username: string;
   lane: number;
@@ -40,6 +42,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
   private ctx!: CanvasRenderingContext2D;
   private dinoSprite = new Image();
+  private coloredSprites = new Map<string, HTMLCanvasElement>();
   private cactusSprite = new Image();
   private birdSprite = new Image();
   private skyImage = new Image();
@@ -64,10 +67,13 @@ export class MatchGame implements AfterViewInit, OnDestroy {
   private obstacleType: 'cactus' | 'bird' = 'cactus';
   private readonly baseObstacleSpeed = 4.5;
   private obstaclePassed = false;
+  private obstacleHit = false;
 
   private frameTimer = 0;
   private readonly frameDuration = 150;
-  private lastTimestamp = 0;
+  private clock = new GameClock();
+  private lastUiUpdate = 0;
+  private resultsTimer?: ReturnType<typeof setTimeout>;
   private lastBroadcast = 0;
   private lastStandingsUpdate = 0;
   private readonly standingsUpdateInterval = 300;
@@ -78,7 +84,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
   isSuddenDeath = false;
   displaySecondsLeft = 180;
   speedTier = 1;
-  showStandings = true;
+  showStandings = window.innerWidth > 700;
   standings: StandingEntry[] = [];
   private matchEnded = false;
 
@@ -92,6 +98,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     private router: Router,
     private nakama: NakamaService,
     private ngZone: NgZone,
+    private cdr: ChangeDetectorRef,
     public language: LanguageService,
     public sound: SoundService
   ) {}
@@ -121,6 +128,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     this.dinos = sortedIds.map((userId, index) => ({
       userId,
       username: match.presences?.find(p => p.user_id === userId)?.username ?? 'Player',
+      color: userId === myUserId ? this.nakama.getSelectedColor() : '#4ade80',
       lane: index, y: 0, velocityY: 0, isJumping: false, isDucking: false, frameIndex: 1,
       eliminated: false, isLocal: userId === myUserId, lives: this.startingLives, score: 0,
       freezeUntil: 0, protectedUntil: 0
@@ -136,19 +144,21 @@ export class MatchGame implements AfterViewInit, OnDestroy {
       if (matchData.op_code === 2) {
         dino.y = payload.y; dino.isJumping = payload.isJumping; dino.isDucking = payload.isDucking;
         dino.frameIndex = payload.frameIndex; dino.score = payload.score;
+        if (typeof payload.color === 'string' && /^#[0-9a-f]{6}$/i.test(payload.color)) dino.color = payload.color.toLowerCase();
       } else if (matchData.op_code === 3) {
         dino.eliminated = true;
-        this.checkMatchEnd(performance.now());
+        this.checkMatchEnd(this.clock.time);
       } else if (matchData.op_code === 4) {
         dino.lives = payload.lives;
-        dino.freezeUntil = performance.now() + this.freezeDurationMs;
-        dino.protectedUntil = performance.now() + this.freezeDurationMs + this.invincibleDurationMs;
+        dino.freezeUntil = this.clock.time + this.freezeDurationMs;
+        dino.protectedUntil = this.clock.time + this.freezeDurationMs + this.invincibleDurationMs;
       }
     };
 
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
-    this.matchStartTime = performance.now();
+    window.addEventListener('blur', this.clearKeys);
+    this.matchStartTime = 0;
 
     this.ngZone.runOutsideAngular(() => {
       this.animationFrameId = requestAnimationFrame(this.gameLoop);
@@ -157,13 +167,21 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     cancelAnimationFrame(this.animationFrameId);
+    clearTimeout(this.resultsTimer);
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
+    window.removeEventListener('blur', this.clearKeys);
     const socket = this.nakama.getSocket();
     if (socket) socket.onmatchdata = () => {};
   }
 
   onExit() { this.router.navigate(['/dashboard']); }
+
+  captureControl(event: PointerEvent, action: 'jump' | 'duck') {
+    event.preventDefault();
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+    if (action === 'jump') this.pressJump(); else this.pressDuck();
+  }
 
   pressJump() { this.keys['ArrowUp'] = true; }
   releaseJump() { this.keys['ArrowUp'] = false; }
@@ -192,9 +210,11 @@ export class MatchGame implements AfterViewInit, OnDestroy {
         highScore: me.score,
         standings: this.dinos.map(d => ({ username: d.username, score: d.score, isLocal: d.isLocal }))
       };
-      setTimeout(() => this.router.navigate(['/results']), 1200);
+      this.resultsTimer = setTimeout(() => this.router.navigate(['/results']), 1200);
     }
   }
+
+  private clearKeys = () => { this.keys = {}; };
 
   private onKeyDown = (e: KeyboardEvent) => {
     this.keys[e.code] = true;
@@ -204,10 +224,8 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
   private gameLoop = (timestamp: number) => {
     this.animationFrameId = requestAnimationFrame(this.gameLoop);
-    const deltaTime = timestamp - this.lastTimestamp;
-    this.lastTimestamp = timestamp;
-    this.update(deltaTime, timestamp);
-    this.draw(timestamp);
+    this.clock.advance(timestamp, this.matchEnded, (step, time) => this.update(step, time));
+    this.draw(this.clock.time);
     if (timestamp - this.lastStandingsUpdate > this.standingsUpdateInterval) {
       this.lastStandingsUpdate = timestamp;
       this.syncUiState();
@@ -225,6 +243,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     // (updated every frame inside update(), outside the zone) actually show up.
     this.ngZone.run(() => {
       this.standings = snapshot;
+      this.cdr.markForCheck();
     });
   }
 
@@ -238,7 +257,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
   private update(deltaTime: number, timestamp: number) {
     const me = this.dinos.find(d => d.isLocal);
-    if (!me) return;
+    if (!me || this.matchEnded) return;
 
     const elapsedMs = timestamp - this.matchStartTime;
     this.displaySecondsLeft = Math.max(0, Math.ceil((this.matchDurationMs - elapsedMs) / 1000));
@@ -248,7 +267,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
     const obsWidth = this.obstacleType === 'cactus' ? 22 : 24;
     this.obstacleX -= effectiveSpeed;
 
-    if (!me.eliminated && !this.obstaclePassed && this.obstacleX + obsWidth < 50) {
+    if (!me.eliminated && !this.obstaclePassed && !this.obstacleHit && this.obstacleX + obsWidth < 50) {
       this.obstaclePassed = true;
       me.score += 1;
     }
@@ -257,6 +276,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
       this.obstacleX = 1200;
       this.obstacleType = this.rng() < 0.5 ? 'cactus' : 'bird';
       this.obstaclePassed = false;
+      this.obstacleHit = false;
     }
 
     if (!me.eliminated) {
@@ -287,14 +307,15 @@ export class MatchGame implements AfterViewInit, OnDestroy {
         const ow = obsWidth - this.OBS_MARGIN * 2, oh = obsH - this.OBS_MARGIN * 2;
 
         if (this.isColliding(dx, dy, dw, dh, ox, oy, ow, oh)) {
+        this.obstacleHit = true;
           this.sound.play(220, 0.15);
           me.lives -= 1;
           if (me.lives <= 0) {
             me.eliminated = true;
             this.nakama.sendElimination(this.matchId);
-            this.nakama.submitScore('dino_multiplayer', me.score);
+            void this.nakama.submitScore('dino_multiplayer', me.score).catch(error => console.error('Score could not be saved', error));
             const stillAliveNow = this.dinos.filter(d => !d.eliminated).length;
-            this.nakama.awardCoins(me.score, me.lives, this.dinos.length, stillAliveNow === 0);
+            void this.nakama.awardCoins(me.score, me.lives, this.dinos.length, stillAliveNow === 0).catch(error => console.error('Coins could not be saved', error));
             this.checkMatchEnd(timestamp);
           } else {
             me.freezeUntil = timestamp + this.freezeDurationMs;
@@ -307,12 +328,38 @@ export class MatchGame implements AfterViewInit, OnDestroy {
 
     if (timestamp - this.lastBroadcast > 50) {
       this.lastBroadcast = timestamp;
-      this.nakama.sendPosition(this.matchId, { y: me.y, isJumping: me.isJumping, isDucking: me.isDucking, frameIndex: me.frameIndex, score: me.score });
+      this.nakama.sendPosition(this.matchId, { color: me.color, y: me.y, isJumping: me.isJumping, isDucking: me.isDucking, frameIndex: me.frameIndex, score: me.score });
     }
   }
 
   private isColliding(x1: number, y1: number, w1: number, h1: number, x2: number, y2: number, w2: number, h2: number) {
     return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
+  }
+
+  private coloredSprite(color: string): CanvasImageSource {
+    if (!this.dinoSprite.complete || !this.dinoSprite.naturalWidth) return this.dinoSprite;
+    const safeColor = /^#[0-9a-f]{6}$/i.test(color) ? color.toLowerCase() : '#4ade80';
+    const cached = this.coloredSprites.get(safeColor);
+    if (cached) return cached;
+    const canvas = document.createElement('canvas');
+    canvas.width = this.dinoSprite.naturalWidth;
+    canvas.height = this.dinoSprite.naturalHeight;
+    const context = canvas.getContext('2d')!;
+    context.drawImage(this.dinoSprite, 0, 0);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    const rgb = [1, 3, 5].map(i => parseInt(safeColor.slice(i, i + 2), 16));
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      const [r, g, b] = pixels.data.slice(i, i + 3);
+      // Recolor the green body, preserving transparency, white eyes and shading.
+      if (pixels.data[i + 3] && g > r * 1.15 && g > b * 1.05) {
+        const shade = Math.min(1, g / 96);
+        for (let channel = 0; channel < 3; channel++) pixels.data[i + channel] = rgb[channel] * shade;
+      }
+    }
+    context.putImageData(pixels, 0, 0);
+    if (this.coloredSprites.size >= 16) this.coloredSprites.clear();
+    this.coloredSprites.set(safeColor, canvas);
+    return canvas;
   }
 
   private draw(timestamp: number) {
@@ -378,7 +425,7 @@ export class MatchGame implements AfterViewInit, OnDestroy {
       if (this.obstacleType === 'cactus') this.ctx.drawImage(this.cactusSprite, this.obstacleX, obsY, 22, 40);
       else this.ctx.drawImage(this.birdSprite, this.obstacleX, obsY, 24, 14);
 
-      this.ctx.drawImage(this.dinoSprite, sx, 0, this.SW, this.SH, 50, dinoDrawY, 64, dinoHeight);
+      this.ctx.drawImage(this.coloredSprite(dino.color), sx, 0, this.SW, this.SH, 50, dinoDrawY, 64, dinoHeight);
       this.ctx.globalAlpha = 1;
     }
   }

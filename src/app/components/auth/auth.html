@@ -1,13 +1,13 @@
 <div class="auth-page">
-  <a class="back-btn" routerLink="/">
+  <a class="back-btn" [attr.aria-label]="language.t('back')" routerLink="/">
     <i class="fa-solid fa-arrow-left"></i>
   </a>
 
   <div class="lang-sound-row">
-    <button class="icon-btn" (click)="language.toggle()">
+    <button class="icon-btn" [attr.aria-label]="language.t('changeLanguage')" (click)="language.toggle()">
       <i class="fa-solid fa-globe"></i> {{ language.lang() === 'en' ? 'EN' : 'FR' }}
     </button>
-    <button class="icon-btn" (click)="sound.toggleMute()">
+    <button class="icon-btn" [attr.aria-label]="language.t(sound.muted ? 'unmute' : 'mute')" [attr.aria-pressed]="sound.muted" (click)="sound.toggleMute()">
       <i class="fa-solid" [class.fa-volume-xmark]="sound.muted" [class.fa-volume-high]="!sound.muted"></i>
     </button>
   </div>
@@ -23,7 +23,7 @@
   </header>
 
   <div class="auth-card">
-    <h2>WELCOME BACK, RUNNER!</h2>
+    <h2>{{ mode === 'login' ? t('welcome') : t('submitSignup') }}</h2>
 
     <div class="auth-tabs">
       <button class="tab" [class.active]="mode === 'login'" (click)="switchMode('login')">{{ t('login') }}</button>
@@ -31,24 +31,24 @@
     </div>
 
     <form (ngSubmit)="onSubmit()">
-      <label><i class="fa-solid fa-envelope"></i> Email Address</label>
-      <input type="email" [(ngModel)]="email" name="email" required />
+      <label for="email"><i class="fa-solid fa-envelope"></i> {{ t('email') }}</label>
+      <input id="email" [placeholder]="t('emailPlaceholder')" autocomplete="email" type="email" [(ngModel)]="email" name="email" required />
 
       @if (mode === 'signup') {
-  <label><i class="fa-solid fa-user"></i> {{ t('username') }}</label>
-  <input type="text" [(ngModel)]="username" name="username" required />
+  <label for="username"><i class="fa-solid fa-user"></i> {{ t('username') }}</label>
+  <input id="username" [placeholder]="t('usernamePlaceholder')" autocomplete="username" type="text" [(ngModel)]="username" name="username" required />
 }
 
-      <label><i class="fa-solid fa-lock"></i> Password</label>
+      <label for="password"><i class="fa-solid fa-lock"></i> {{ t('password') }}</label>
       <div class="password-wrap">
-        <input type="password" [(ngModel)]="password" name="password" required />
-        <span class="eye"><i class="fa-solid fa-eye"></i></span>
+        <input id="password" [placeholder]="t(mode === 'signup' ? 'signupPasswordPlaceholder' : 'passwordPlaceholder')" [type]="showPassword ? 'text' : 'password'" [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'" [(ngModel)]="password" name="password" required />
+        <button class="eye" type="button" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'" [attr.aria-pressed]="showPassword"><i class="fa-solid fa-eye"></i></button>
       </div>
 
       @if (mode === 'login') {
         <div class="options-row">
           
-          <a (click)="onForgotPassword()">Forgot Password?</a>
+          <span class="hint-text">{{ language.lang() === 'fr' ? 'Réinitialisation du mot de passe bientôt disponible' : 'Password reset coming soon' }}</span>
         </div>
         @if (forgotPasswordMsg) {
           <p class="hint-text">{{ forgotPasswordMsg }}</p>
@@ -69,7 +69,8 @@
     </form>
 
     <p class="switch-note">
-      Don't have an account? <a (click)="switchMode('signup')">Sign up</a>
+      {{ mode === 'login' ? t('noAccount') : t('hasAccount') }}
+      <button class="text-link" type="button" (click)="switchMode(mode === 'login' ? 'signup' : 'login')">{{ mode === 'login' ? t('signup') : t('login') }}</button>
     </p>
   </div>
 

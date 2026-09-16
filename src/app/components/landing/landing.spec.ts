@@ -1,3 +1,4 @@
+import { testProviders } from '../../testing/test-providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
@@ -12,13 +13,14 @@ describe('Landing', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Landing],
-      providers: [provideRouter([])],
+      providers: testProviders(),
     }).compileComponents();
 
     fixture = TestBed.createComponent(Landing);
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
-    spyOn(router, 'navigate');
+
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     await fixture.whenStable();
   });
 
@@ -26,15 +28,15 @@ describe('Landing', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should start solo game from the primary CTA', () => {
+  it('should open mode selection from the primary CTA', () => {
     component.onStartGame();
 
-    expect(router.navigate).toHaveBeenCalledWith(['/solo-game']);
+    expect(router.navigate).toHaveBeenCalledWith(['/mode-select']);
   });
 
-  it('should route join match to auth', () => {
-    component.onJoinMatch();
+  it('should open the leaderboard', () => {
+    component.onLeaderboard();
 
-    expect(router.navigate).toHaveBeenCalledWith(['/auth']);
+    expect(router.navigate).toHaveBeenCalledWith(['/leaderboard']);
   });
 });

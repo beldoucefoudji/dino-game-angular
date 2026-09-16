@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ThemeService } from './services/theme';
 import { SoundService } from './services/sound';
-import { MusicService } from './services/music.service';
 
 @Component({
   selector: 'app-root',
@@ -16,12 +15,11 @@ export class App implements OnInit {
 
   constructor(
     private themeService: ThemeService,
-    private sound: SoundService,
-    private music: MusicService
+    private sound: SoundService
   ) {}
 
   ngOnInit(): void {
     this.themeService.initializeTheme();
-    this.music.init();
+    this.sound.startMusic('/theme2.ogg');
   }
 }

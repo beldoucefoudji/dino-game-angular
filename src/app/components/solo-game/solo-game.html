@@ -1,16 +1,16 @@
 <div class="game-page">
   <div class="canvas-wrap">
-    <canvas #gameCanvas width="1100" height="500"></canvas>
+    <canvas #gameCanvas width="1100" height="500" [attr.aria-label]="language.t('gameCanvas')">{{ language.t('gameCanvas') }}</canvas>
 
-    <button class="back-btn" (click)="onExit()">
+    <button class="back-btn" [attr.aria-label]="language.t('back')" (click)="onExit()">
       <i class="bi bi-arrow-left"></i>
     </button>
 
     <div class="top-left-icons">
-      <button class="icon-btn round" (click)="language.toggle()">
+      <button class="icon-btn round" [attr.aria-label]="language.t('changeLanguage')" (click)="language.toggle()">
         <i class="bi bi-globe"></i>
       </button>
-      <button class="icon-btn round" (click)="sound.toggleMute()">
+      <button class="icon-btn round" [attr.aria-label]="language.t(sound.muted ? 'unmute' : 'mute')" [attr.aria-pressed]="sound.muted" (click)="sound.toggleMute()">
         <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted"></i>
       </button>
     </div>
@@ -32,22 +32,22 @@
     </div>
 
     <div class="score-panel">
-      <p class="score-label">SCORE</p>
+      <p class="score-label">{{ language.t('score') }}</p>
       <p class="score-value">{{ Math.floor(score) }}</p>
-      <p class="best-value">BEST: {{ Math.floor(highScore) }}</p>
+      <p class="best-value">{{ language.t('best') }}: {{ Math.floor(highScore) }}</p>
     </div>
 
     <div class="top-right">
       <div class="coin-badge">
         <i class="bi bi-coin"></i> {{ coins }}
       </div>
-      <button class="icon-btn round" (click)="togglePause()">
+      <button class="icon-btn round" [attr.aria-label]="language.t(isPaused ? 'resume' : 'pause')" (click)="togglePause()">
         <i class="bi" [class.bi-play-fill]="isPaused" [class.bi-pause-fill]="!isPaused"></i>
       </button>
     </div>
 
     <div class="speed-panel">
-      <p class="speed-label">SPEED</p>
+      <p class="speed-label">{{ language.t('speed') }}</p>
       <div class="speed-bar">
         @for (i of [1,2,3,4,5]; track i) {
           <span class="speed-seg" [class.filled]="i <= speedTier"></span>
@@ -56,20 +56,14 @@
     </div>
 
     <div class="distance-wrap">
-      <div class="distance-bar">
-        <div class="distance-fill" [style.width.%]="distancePercent"></div>
-        <span class="flag">
-          <i class="bi bi-flag-fill"></i>
-        </span>
-      </div>
-      <span class="distance-label">{{ Math.floor(score * 3) }} M</span>
+      <span class="distance-label">{{ Math.floor(distance) }} M</span>
     </div>
 
-    <button class="touch-btn jump-btn" (pointerdown)="pressJump()" (pointerup)="releaseJump()">
-      <span><i class="bi bi-arrow-up-circle-fill"></i></span><small>JUMP</small>
+    <button class="touch-btn jump-btn" (pointerdown)="captureControl($event, 'jump')" (pointerup)="releaseJump()" (pointercancel)="releaseJump()" (lostpointercapture)="releaseJump()" (keydown.enter)="pressJump()" (keyup.enter)="releaseJump()" (keydown.space)="$event.preventDefault(); pressJump()" (keyup.space)="releaseJump()" (blur)="releaseJump()">
+      <span><i class="bi bi-arrow-up-circle-fill"></i></span><small>{{ language.t('jump') }}</small>
     </button>
-    <button class="touch-btn duck-btn" (pointerdown)="pressDuck()" (pointerup)="releaseDuck()">
-      <span><i class="bi bi-arrow-down-circle-fill"></i></span><small>SLIDE</small>
+    <button class="touch-btn duck-btn" (pointerdown)="captureControl($event, 'duck')" (pointerup)="releaseDuck()" (pointercancel)="releaseDuck()" (lostpointercapture)="releaseDuck()" (keydown.enter)="pressDuck()" (keyup.enter)="releaseDuck()" (keydown.space)="$event.preventDefault(); pressDuck()" (keyup.space)="releaseDuck()" (blur)="releaseDuck()">
+      <span><i class="bi bi-arrow-down-circle-fill"></i></span><small>{{ language.t('duck') }}</small>
     </button>
   </div>
 </div>

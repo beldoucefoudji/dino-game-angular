@@ -1,31 +1,48 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
-export class SoundService {
+export class SoundService implements OnDestroy {
   muted = localStorage.getItem('dino_muted') === 'true';
   private ctx: AudioContext | null = null;
   private music = new Audio();
-  private musicStarted = false;
+  private musicEnabled = false;
+  private pageActive = true;
   private gestureListenerAdded = false;
 
   constructor() {
-    // Automatically attach fallback listeners if unmuted on app startup
-    if (!this.muted) {
-      this.addGestureListeners();
-    }
+    window.addEventListener('pagehide', this.onPageHide);
+    window.addEventListener('pageshow', this.onPageShow);
   }
 
   toggleMute() {
     this.muted = !this.muted;
     this.music.muted = this.muted;
     localStorage.setItem('dino_muted', String(this.muted));
-
-    if (!this.muted && this.music.src && this.music.paused) {
-      this.attemptPlayMusic();
-    } else if (this.muted && !this.music.paused) {
+    if (this.muted) {
       this.music.pause();
+      this.removeGestureListeners();
+    } else {
+      this.attemptPlayMusic();
     }
   }
+
+  ngOnDestroy() {
+    this.stopMusic();
+    window.removeEventListener('pagehide', this.onPageHide);
+    window.removeEventListener('pageshow', this.onPageShow);
+    void this.ctx?.close().catch(() => {});
+  }
+
+  private onPageHide = () => {
+    this.pageActive = false;
+    this.music.pause();
+    this.removeGestureListeners();
+  };
+
+  private onPageShow = () => {
+    this.pageActive = true;
+    this.attemptPlayMusic();
+  };
 
   // Synthesized Sound Effects (SFX)
   playJump() {
@@ -81,22 +98,22 @@ export class SoundService {
     osc.stop(this.ctx!.currentTime + duration);
   }
 
-  // Background Music
+  // One root-scoped audio element continues playing across route changes.
   startMusic(src: string) {
-    if (this.musicStarted && this.music.src.endsWith(src)) return;
-
-    this.music.src = src;
+    const url = new URL(src, document.baseURI).href;
+    if (this.music.src !== url) this.music.src = url;
+    this.musicEnabled = true;
     this.music.loop = true;
     this.music.volume = 0.3;
     this.music.muted = this.muted;
-
     this.attemptPlayMusic();
   }
 
   stopMusic() {
+    this.musicEnabled = false;
+    this.removeGestureListeners();
     this.music.pause();
     this.music.currentTime = 0;
-    this.musicStarted = false;
   }
 
   private ensureAudioContext() {
@@ -109,33 +126,21 @@ export class SoundService {
   }
 
   private attemptPlayMusic() {
-    if (this.muted || !this.music.src) return;
-
-    this.ensureAudioContext();
-
-    this.music.play()
+    if (this.muted || !this.musicEnabled || !this.pageActive || !this.music.src) return;
+    if (!this.music.paused) return;
+    // Register before attempting autoplay so the first interaction can unlock it.
+    this.addGestureListeners();
+    void this.music.play()
       .then(() => {
-        this.musicStarted = true;
+        if (this.muted || !this.musicEnabled || !this.pageActive) this.music.pause();
         this.removeGestureListeners();
       })
       .catch(() => {
-        // Autoplay policy blocked play() - waiting for user interaction
-        this.addGestureListeners();
+        if (!this.muted && this.musicEnabled && this.pageActive) this.addGestureListeners();
       });
   }
 
-  private handleUserGesture = () => {
-    this.ensureAudioContext();
-
-    if (!this.muted && this.music.src && this.music.paused) {
-      this.music.play()
-        .then(() => {
-          this.musicStarted = true;
-          this.removeGestureListeners();
-        })
-        .catch(() => {});
-    }
-  };
+  private handleUserGesture = () => { this.attemptPlayMusic(); };
 
   private addGestureListeners() {
     if (this.gestureListenerAdded) return;

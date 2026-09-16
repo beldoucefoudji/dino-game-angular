@@ -1,19 +1,19 @@
 <div class="game-page">
   <div class="canvas-wrap">
-    <canvas #gameCanvas width="1100" height="500"></canvas>
+    <canvas #gameCanvas width="1100" height="500" [attr.aria-label]="language.t('gameCanvas')">{{ language.t('gameCanvas') }}</canvas>
 
-    <button class="back-btn" (click)="onExit()"><i class="fa-solid fa-arrow-left"></i></button>
+    <button class="back-btn" [attr.aria-label]="language.t('back')" (click)="onExit()"><i class="fa-solid fa-arrow-left"></i></button>
 
     <div class="top-left-icons">
-      <button class="icon-btn round" (click)="language.toggle()"><i class="fa-solid fa-globe"></i></button>
-      <button class="icon-btn round" (click)="sound.toggleMute()">
+      <button class="icon-btn round" [attr.aria-label]="language.t('changeLanguage')" (click)="language.toggle()"><i class="fa-solid fa-globe"></i></button>
+      <button class="icon-btn round" [attr.aria-label]="language.t(sound.muted ? 'unmute' : 'mute')" [attr.aria-pressed]="sound.muted" (click)="sound.toggleMute()">
         <i class="fa-solid" [class.fa-volume-high]="!sound.muted" [class.fa-volume-xmark]="sound.muted"></i>
       </button>
     </div>
 
     <div class="timer-panel">
       <p class="timer-value" [class.danger]="isSuddenDeath">
-        {{ isSuddenDeath ? 'SUDDEN DEATH' : displaySecondsLeft + 's' }}
+        {{ isSuddenDeath ? language.t('suddenDeath') : displaySecondsLeft + 's' }}
       </p>
       <div class="speed-bar">
         @for (i of [1,2,3,4,5,6,7]; track i) {
@@ -22,28 +22,28 @@
       </div>
     </div>
 
-    <button class="standings-toggle" (click)="showStandings = !showStandings">
+    <button class="standings-toggle" [attr.aria-label]="language.t('toggleStandings')" [attr.aria-expanded]="showStandings" (click)="showStandings = !showStandings">
       <i class="fa-solid fa-trophy"></i>
     </button>
 
     @if (showStandings) {
       <aside class="standings-panel">
-        <p class="standings-title">Standings</p>
+        <p class="standings-title">{{ language.t('standings') }}</p>
         @for (entry of standings; track entry.userId; let i = $index) {
           <div class="standing-row" [class.local]="entry.isLocal" [class.out]="entry.eliminated">
             <span class="standing-rank">{{ i + 1 }}</span>
-            <span class="standing-name">{{ entry.username }}{{ entry.isLocal ? ' (you)' : '' }}</span>
+            <span class="standing-name">{{ entry.username }}{{ entry.isLocal ? ' (' + language.t('you') + ')' : '' }}</span>
             <span class="standing-score">{{ entry.score }}pt</span>
           </div>
         }
       </aside>
     }
 
-    <button class="touch-btn jump-btn" (pointerdown)="pressJump()" (pointerup)="releaseJump()">
-      <i class="fa-solid fa-arrow-up"></i><small>JUMP</small>
+    <button class="touch-btn jump-btn" (pointerdown)="captureControl($event, 'jump')" (pointerup)="releaseJump()" (pointercancel)="releaseJump()" (lostpointercapture)="releaseJump()" (keydown.enter)="pressJump()" (keyup.enter)="releaseJump()" (keydown.space)="$event.preventDefault(); pressJump()" (keyup.space)="releaseJump()" (blur)="releaseJump()">
+      <i class="fa-solid fa-arrow-up"></i><small>{{ language.t('jump') }}</small>
     </button>
-    <button class="touch-btn duck-btn" (pointerdown)="pressDuck()" (pointerup)="releaseDuck()">
-      <i class="fa-solid fa-arrow-down"></i><small>SLIDE</small>
+    <button class="touch-btn duck-btn" (pointerdown)="captureControl($event, 'duck')" (pointerup)="releaseDuck()" (pointercancel)="releaseDuck()" (lostpointercapture)="releaseDuck()" (keydown.enter)="pressDuck()" (keyup.enter)="releaseDuck()" (keydown.space)="$event.preventDefault(); pressDuck()" (keyup.space)="releaseDuck()" (blur)="releaseDuck()">
+      <i class="fa-solid fa-arrow-down"></i><small>{{ language.t('duck') }}</small>
     </button>
   </div>
 </div>

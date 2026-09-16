@@ -1,22 +1,24 @@
-import { Component, OnInit } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { SoundService } from '../../services/sound';
+import { ChangeDetectorRef, inject, Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { NakamaService } from '../../services/nakama';
 import { getDeviceId } from '../../services/device-id';
 
 @Component({
   selector: 'app-leaderboard',
-  imports: [RouterLink],
+  imports: [],
   templateUrl: './leaderboard.html',
   styleUrl: './leaderboard.css'
 })
 export class Leaderboard implements OnInit {
+  private readonly cdr = inject(ChangeDetectorRef);
   entries: any[] = [];
   loading = true;
   loadError = '';
   activeTab: 'global' | 'weekly' | 'friends' = 'global';
   myUserId: string | null = null;
 
-  constructor(private router: Router, private nakama: NakamaService) {}
+  constructor(public sound: SoundService, private router: Router, private nakama: NakamaService) {}
 
   async ngOnInit() {
     try {
@@ -29,6 +31,7 @@ export class Leaderboard implements OnInit {
       console.error('Leaderboard init failed:', error);
       this.loadError = 'Could not connect. Is the Nakama server running?';
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -45,6 +48,7 @@ export class Leaderboard implements OnInit {
       this.loadError = 'Could not load leaderboard. It may not exist on the server yet.';
     } finally {
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
 

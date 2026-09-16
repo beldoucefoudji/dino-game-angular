@@ -80,16 +80,28 @@
   display: none;
 }
 
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-  display: flex; align-items: center; justify-content: center; z-index: 50;
+ .guide-dialog {
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-card);
+  color: var(--color-text);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
-.modal-box {
-  background: var(--color-card); border: 1px solid var(--color-border);
-  border-radius: 14px; padding: 28px; max-width: 380px;
-}
-.modal-box h2 { color: var(--color-primary); margin-bottom: 16px; }
-.modal-box ul { padding-left: 18px; line-height: 1.8; margin-bottom: 20px; }
+.guide-dialog::backdrop { background: rgba(0, 0, 0, .75); }
+.guide-content { padding: clamp(18px, 4vw, 28px); }
+.guide-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.guide-header h2 { color: var(--color-primary); font-size: clamp(20px, 4vw, 26px); }
+.guide-close { flex: 0 0 44px; height: 44px; padding: 0; }
+.guide-intro { color: var(--color-text-muted); line-height: 1.6; }
+.guide-section { margin: 18px 0; }
+.guide-section h3 { font-size: 18px; color: var(--color-primary); }
+.guide-section p { margin: 6px 0 0; line-height: 1.65; font-size: 14px; }
+.guide-highlight { padding: 12px 16px; background: var(--color-bg-alt); border-radius: 8px; }
+
 .nav-icons {
   display: flex;
   align-items: center;

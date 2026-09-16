@@ -1,5 +1,8 @@
 <div class="leaderboard-page" (click)="goBack()">
   <div class="leaderboard-modal" (click)="$event.stopPropagation()">
+      <button type="button" class="btn-ghost" (click)="sound.toggleMute()" [attr.aria-label]="sound.muted ? 'Unmute sound' : 'Mute sound'" [attr.aria-pressed]="sound.muted">
+        <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted" aria-hidden="true"></i>
+      </button>
 
     <button class="btn-ghost" (click)="goBack()">
       <i class="bi bi-arrow-left"></i> Back
@@ -9,10 +12,11 @@
 
     <div class="tabs">
       <button class="tab" [class.active]="activeTab === 'global'" (click)="switchTab('global')">GLOBAL</button>
-      <button class="tab" [class.active]="activeTab === 'weekly'" (click)="switchTab('weekly')">WEEKLY</button>
-      <button class="tab" [class.active]="activeTab === 'friends'" (click)="switchTab('friends')">FRIENDS</button>
+      <button class="tab" [class.active]="activeTab === 'weekly'" disabled title="Weekly rankings are not available yet">WEEKLY</button>
+      <button class="tab" [class.active]="activeTab === 'friends'" disabled title="Friends rankings are not available yet">FRIENDS</button>
     </div>
 
+    <p class="muted">Weekly and friends rankings are coming soon.</p>
     @if (loading) {
       <p class="muted">Loading...</p>
     } @else if (loadError) {

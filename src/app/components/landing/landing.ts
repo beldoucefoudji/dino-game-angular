@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NakamaService } from '../../services/nakama';
 import { LanguageService } from '../../services/language';
@@ -13,6 +13,7 @@ import { SoundService } from '../../services/sound';
 export class Landing implements OnInit {
   username: string | null = null;
   showHowToPlay = false;
+  @ViewChild('guideDialog') guideDialog!: ElementRef<HTMLDialogElement>;
 
   constructor(
     private router: Router,
@@ -32,7 +33,6 @@ export class Landing implements OnInit {
 
   onStartGame() {
     this.sound.play(500);
-    this.sound.startMusic('/theme1.mp3');
     this.router.navigate(['/mode-select']);
   }
 
@@ -43,6 +43,13 @@ export class Landing implements OnInit {
 
   toggleHowToPlay() {
     this.sound.play(400);
-    this.showHowToPlay = !this.showHowToPlay;
+    const dialog = this.guideDialog.nativeElement;
+    if (dialog.open) {
+      dialog.close();
+      this.showHowToPlay = false;
+    } else {
+      dialog.showModal();
+      this.showHowToPlay = true;
+    }
   }
 }

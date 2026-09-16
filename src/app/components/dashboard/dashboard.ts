@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { SoundService } from '../../services/sound';
+import { ChangeDetectorRef, inject, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NakamaService } from '../../services/nakama';
@@ -12,7 +13,10 @@ import { ThemeService } from '../../services/theme';
   styleUrls: ['./dashboard.css']
 })
 export class Dashboard implements OnInit {
+  private readonly cdr = inject(ChangeDetectorRef);
   isConnecting = false;
+  isSavingProfile = false;
+  profileError = "";
   connectError = '';
   joinCode = '';
   unreadCount = 0;
@@ -40,6 +44,7 @@ export class Dashboard implements OnInit {
   constructor(
     private router: Router,
     private nakama: NakamaService,
+    public sound: SoundService,
     private themeService: ThemeService
   ) {}
 
@@ -49,14 +54,23 @@ export class Dashboard implements OnInit {
       return;
     }
 
+    this.loadSettings();
+    try {
+      await this.nakama.loadProfile();
+      this.syncProfileFromService();
+    } catch { this.profileError = 'Could not load your profile. Please try again.'; }
+    try {
+    await this.nakama.ensureSocketConnected();
     const pending = await this.nakama.fetchPendingNotifications();
     this.unreadCount = pending.length;
 
     this.nakama.onIncomingNotification((notification) => {
-      this.unreadCount += 1;
+      if (this.notificationsEnabled) this.unreadCount += 1;
       console.log('New invite received:', notification.content);
       // notification.content.match_id is available here for a "Join" action later
     });
+    } catch { this.connectError = 'Notifications are temporarily unavailable.'; }
+    this.cdr.markForCheck();
   }
   private syncProfileFromService() {
     const profile = this.nakama.getProfile();
@@ -90,6 +104,8 @@ export class Dashboard implements OnInit {
     this.isMobileMenuOpen = false;
   }
 
+  onLeaderboard() { this.router.navigate(['/leaderboard']); }
+
   onSoloRun() {
     this.router.navigate(['/solo-game']);
   }
@@ -106,6 +122,7 @@ export class Dashboard implements OnInit {
       this.connectError = 'Could not connect.';
     } finally {
       this.isConnecting = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -122,6 +139,7 @@ export class Dashboard implements OnInit {
       this.connectError = 'Could not join. Check the code.';
     } finally {
       this.isConnecting = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -157,29 +175,35 @@ export class Dashboard implements OnInit {
 
   cancelProfileEdit() {
     this.isProfileEditing = false;
+    this.syncProfileFromService();
     this.profileSavedMessage = '';
   }
 
-  saveProfile() {
+  async saveProfile() {
+    if (this.isSavingProfile) return;
+    this.isSavingProfile = true;
+    this.profileError = "";
+    try {
     const nextUsername = this.editableProfile.username.trim() || 'Player';
-    const nextEmail = this.editableProfile.email.trim() || 'player@example.com';
     const nextBio = this.editableProfile.bio.trim() || 'No bio yet.';
     const nextMembership = this.editableProfile.membership.trim() || 'Rookie Runner';
 
-    this.nakama.updateProfile({
+    await this.nakama.saveProfile({
       username: nextUsername,
-      email: nextEmail,
+      email: this.profileEmail,
+      avatar: this.profileImagePreview,
       bio: nextBio,
       membership: nextMembership
     });
 
     this.username = nextUsername;
-    this.profileEmail = nextEmail;
     this.profileBio = nextBio;
     this.membership = nextMembership;
 
     this.isProfileEditing = false;
     this.profileSavedMessage = 'Profile updated successfully.';
+    } catch { this.profileError = 'Could not save your profile. Please retry.'; }
+    finally { this.isSavingProfile = false; this.cdr.markForCheck(); }
   }
 
   onProfileImageSelected(event: Event) {
@@ -190,12 +214,18 @@ export class Dashboard implements OnInit {
       return;
     }
 
+    if (!file.type.startsWith('image/') || file.size > 256 * 1024) {
+      this.profileError = 'Choose an image smaller than 256 KB.';
+      return;
+    }
+    this.profileError = '';
     const reader = new FileReader();
     reader.onload = () => {
       const avatar = reader.result as string;
       this.profileImagePreview = avatar;
-      this.nakama.updateProfile({ avatar });
+      // Persist the preview only when Save profile is pressed.
       this.profileSavedMessage = '';
+      this.cdr.markForCheck();
     };
     reader.readAsDataURL(file);
   }

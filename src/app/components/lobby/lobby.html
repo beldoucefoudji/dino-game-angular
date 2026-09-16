@@ -8,10 +8,10 @@
       </button>
     </div>
     <div class="lang-sound-row">
-      <button class="icon-btn" (click)="language.toggle()">
+      <button class="icon-btn" [attr.aria-label]="language.t('changeLanguage')" (click)="language.toggle()">
         <i class="bi bi-globe"></i> {{ language.lang() === 'en' ? 'EN' : 'FR' }}
       </button>
-      <button class="icon-btn" (click)="sound.toggleMute()">
+      <button class="icon-btn" [attr.aria-label]="language.t(sound.muted ? 'unmute' : 'mute')" [attr.aria-pressed]="sound.muted" (click)="sound.toggleMute()">
         <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted"></i>
       </button>
     </div>
@@ -23,7 +23,7 @@
 
       @for (player of players; track player.userId; let i = $index) {
         <div class="player-row">
-          <span class="player-avatar">
+          <span class="player-avatar" [style.color]="player.color || '#4ade80'">
             <i class="bi bi-person-fill"></i>
           </span>
           <span class="player-name">{{ player.username }}</span>
@@ -50,10 +50,14 @@
     <div class="settings-card">
       <div class="settings-header">
         <p class="panel-title">{{ t('settings') }}</p>
-        <button class="icon-btn small" (click)="openLoadout()">
+        <button class="icon-btn small" [attr.aria-label]="t('customize')" (click)="openLoadout()">
           <i class="bi bi-palette-fill"></i>
         </button>
       </div>
+      <button type="button" class="btn-ghost full-width customize-dino" (click)="openLoadout()">
+        <span class="dino-preview" [style.background-color]="selectedColor" aria-hidden="true"></span>
+        {{ t('customize') }}
+      </button>
       <div class="setting-row"><span>{{ t('mode') }}</span><strong>{{ t('race') }}</strong></div>
       <div class="setting-row"><span>{{ t('obstacles') }}</span><strong>{{ t('normal') }}</strong></div>
       <div class="setting-row"><span>{{ t('timeLimit') }}</span><strong>180s</strong></div>
@@ -77,10 +81,11 @@
     <div class="loadout-overlay" (click)="closeLoadout()">
       <div class="loadout-modal" (click)="$event.stopPropagation()">
         <h2><i class="bi bi-palette-fill"></i> {{ t('loadout') }}</h2>
-        <div class="color-grid">
+        <span class="dino-preview large" [style.background-color]="selectedColor" aria-hidden="true"></span>
+        <div class="color-grid" role="group" [attr.aria-label]="t('loadout')">
           @for (color of dinoColors; track color) {
-            <button class="color-swatch" [style.background]="color"
-              [class.selected]="color === selectedColor" (click)="selectColor(color)"></button>
+            <button type="button" class="color-swatch" [attr.aria-label]="colorName(color)" [attr.aria-pressed]="color === selectedColor" [style.background]="color"
+              [class.selected]="color === selectedColor" (click)="selectColor(color)">@if (color === selectedColor) { <i class="bi bi-check-lg" aria-hidden="true"></i> }</button>
           }
         </div>
         <button class="btn-primary full-width" (click)="closeLoadout()">

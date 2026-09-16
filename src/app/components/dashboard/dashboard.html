@@ -7,12 +7,12 @@
     <div class="sidebar-logo">Dino Runner</div>
 
     <nav class="sidebar-nav">
-      <a class="nav-item" [class.active]="activeSection === 'dashboard'" (click)="showSection('dashboard')">Dashboard</a>
-      <a class="nav-item" [class.active]="activeSection === 'profile'" (click)="showSection('profile')">Profile</a>
-      <a class="nav-item disabled">Leaderboard</a>
-      <a class="nav-item disabled">History</a>
-      <a class="nav-item disabled">Rankings</a>
-      <a class="nav-item" [class.active]="activeSection === 'settings'" (click)="showSection('settings')">Settings</a>
+      <button type="button" class="nav-item" [class.active]="activeSection === 'dashboard'" (click)="showSection('dashboard')">Dashboard</button>
+      <button type="button" class="nav-item" [class.active]="activeSection === 'profile'" (click)="showSection('profile')">Profile</button>
+      <button class="nav-item" type="button" (click)="onLeaderboard()">Leaderboard</button>
+      <span class="nav-item disabled">History (coming soon)</span>
+      <span class="nav-item disabled">Rankings (coming soon)</span>
+      <button type="button" class="nav-item" [class.active]="activeSection === 'settings'" (click)="showSection('settings')">Settings</button>
       <button class="nav-item btn-ghost full-width" type="button" (click)="onLogout()">Log out</button>
     </nav>
 
@@ -41,6 +41,9 @@
       </button>
       <h1>Your Progress</h1>
       <div class="topbar-icons">
+      <button type="button" class="btn-ghost" (click)="sound.toggleMute()" [attr.aria-label]="sound.muted ? 'Unmute sound' : 'Mute sound'" [attr.aria-pressed]="sound.muted">
+        <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted" aria-hidden="true"></i>
+      </button>
         <button class="icon-btn" (click)="onNotificationsClick()">
           🔔
           @if (unreadCount > 0) {
@@ -73,7 +76,7 @@
               <button class="btn-ghost" type="button" (click)="toggleProfileEdit()">Edit profile</button>
             } @else {
               <button class="btn-ghost" type="button" (click)="cancelProfileEdit()">Cancel</button>
-              <button class="btn-primary" type="button" (click)="saveProfile()">Save profile</button>
+              <button class="btn-primary" type="button" (click)="saveProfile()" [disabled]="isSavingProfile">{{ isSavingProfile ? 'Saving...' : 'Save profile' }}</button>
             }
           </div>
         </div>
@@ -97,7 +100,7 @@
               </div>
               <div class="field-group">
                 <label>Email</label>
-                <input type="email" [(ngModel)]="editableProfile.email" />
+                <input type="email" [value]="profileEmail" readonly aria-label="Account email (read only)" />
               </div>
               <div class="field-group">
                 <label>Membership</label>
@@ -128,6 +131,7 @@
           </div>
         </div>
 
+        @if (profileError) { <p role="alert" class="error-text">{{ profileError }}</p> }
         @if (profileSavedMessage) {
           <p class="success-text">{{ profileSavedMessage }}</p>
         }

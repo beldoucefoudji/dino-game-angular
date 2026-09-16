@@ -16,7 +16,7 @@ export class Results implements OnInit {
   standings: { rank: number; username: string; score: number; isLocal: boolean }[] = [];
   myRank = 1;
 
-  constructor(private router: Router, private nakama: NakamaService, private sound: SoundService) {}
+  constructor(private router: Router, private nakama: NakamaService, public sound: SoundService) {}
 
   ngOnInit() {
     const result = this.nakama.lastResult;

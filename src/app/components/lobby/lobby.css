@@ -78,3 +78,7 @@
   .lobby-body { grid-template-columns: 1fr; }
   .lobby-topbar { justify-content: center; text-align: center; }
 }
+.customize-dino { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+.dino-preview { display: inline-block; width: 64px; height: 64px; flex-shrink: 0; mask: url('/dino-sprite.png') 0 0 / 384px 64px no-repeat; -webkit-mask: url('/dino-sprite.png') 0 0 / 384px 64px no-repeat; }
+.dino-preview.large { margin-top: 16px; }
+.color-swatch { padding: 0; color: #101522; font-size: 24px; }

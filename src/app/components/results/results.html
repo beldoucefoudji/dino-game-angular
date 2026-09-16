@@ -35,6 +35,9 @@
     }
 
     <div class="actions">
+      <button type="button" class="btn-ghost" (click)="sound.toggleMute()" [attr.aria-label]="sound.muted ? 'Unmute sound' : 'Mute sound'" [attr.aria-pressed]="sound.muted">
+        <i class="bi" [class.bi-volume-mute-fill]="sound.muted" [class.bi-volume-up-fill]="!sound.muted" aria-hidden="true"></i>
+      </button>
       <button class="btn-secondary" (click)="playAgain()">
         <i class="bi bi-arrow-counterclockwise"></i> PLAY AGAIN
       </button>

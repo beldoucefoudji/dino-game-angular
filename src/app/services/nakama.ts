@@ -23,9 +23,7 @@ export class NakamaService {
     membership: 'Rookie Runner',
     avatar: '/dino.avif'
   };
-  private selectedColor = '#1D9E75';
-  private lastEmail = '';
-  private lastPassword = '';
+  private selectedColor = '#4ade80';
 
   constructor() {
     this.client = new Client('defaultkey', 'nakama.nkulex.com', '443', true, 30000);
@@ -53,8 +51,7 @@ export class NakamaService {
       });
 
       this.session = session;
-      this.lastEmail = email;
-      this.lastPassword = password;
+
 
       return session;
 
@@ -65,14 +62,14 @@ export class NakamaService {
   }
 
   isAuthenticated(): boolean {
-    return this.session !== null;
+    return this.session !== null && !this.session.isexpired(Date.now() / 1000);
   }
 
   logout(): void {
+    this.socket?.disconnect(false);
     this.session = null;
     this.socket = null;
-    this.lastEmail = '';
-    this.lastPassword = '';
+
     this.profile = {
       username: 'Player',
       email: 'player@example.com',
@@ -80,7 +77,7 @@ export class NakamaService {
       membership: 'Rookie Runner',
       avatar: '/dino.avif'
     };
-    this.selectedColor = '#1D9E75';
+    this.selectedColor = '#4ade80';
   }
 
   updateProfile(profile: Partial<UserProfile>): void {
@@ -92,18 +89,43 @@ export class NakamaService {
     await this.client.updateAccount(this.session, { username });
   }
 
-  // For accounts whose username was set BEFORE this feature existed:
-  // updateUsername() alone doesn't work because the current session
-  // token still has the OLD username baked into it. Re-authenticating
-  // gets a fresh token that reflects the change, then reconnects the socket.
   async updateUsernameAndRefresh(username: string): Promise<void> {
-    if (!this.session) return;
+    if (!this.session) throw new Error('Not authenticated.');
     await this.client.updateAccount(this.session, { username });
-    if (this.lastEmail && this.lastPassword) {
-      this.session = await this.client.authenticateEmail(this.lastEmail, this.lastPassword, false);
-    }
+    this.session = await this.client.sessionRefresh(this.session);
+    this.profile.username = username;
+    await this.ensureSocketConnected(true);
+  }
+
+  async loadProfile(): Promise<void> {
+    if (!this.session) throw new Error('Not authenticated.');
+    const account = await this.client.getAccount(this.session);
+    let metadata: Record<string, any> = {};
+    try { metadata = JSON.parse(account.user?.metadata || '{}'); } catch { /* Empty profile. */ }
+    const stored = await this.client.readStorageObjects(this.session, { object_ids: [{ collection: 'profiles', key: 'details', user_id: this.session.user_id }] });
+    const details = stored.objects?.[0]?.value as Record<string, unknown> | undefined;
+    metadata = { ...metadata, ...details };
+    this.profile = {
+      username: account.user?.username || 'Player',
+      email: account.email || '',
+      bio: typeof metadata['bio'] === 'string' ? metadata['bio'] : '',
+      membership: typeof metadata['membership'] === 'string' ? metadata['membership'] : 'Rookie Runner',
+      avatar: account.user?.avatar_url || '/dino.avif'
+    };
+  }
+
+  async saveProfile(profile: Partial<UserProfile>): Promise<void> {
+    if (!this.session) throw new Error('Not authenticated.');
+    const next = { ...this.profile, ...profile };
+    await this.client.writeStorageObjects(this.session, [{
+      collection: 'profiles', key: 'details', value: { bio: next.bio, membership: next.membership },
+      permission_read: 1, permission_write: 1
+    }]);
+    await this.client.updateAccount(this.session, { username: next.username, avatar_url: next.avatar });
+    this.session = await this.client.sessionRefresh(this.session);
+    this.profile = next;
+    this.socket?.disconnect(false);
     this.socket = null;
-    await this.connectSocket();
   }
 
   getProfile(): UserProfile {
@@ -111,7 +133,7 @@ export class NakamaService {
   }
 
   setSelectedColor(color: string): void {
-    this.selectedColor = color;
+    if (/^#[0-9a-f]{6}$/i.test(color)) this.selectedColor = color.toLowerCase();
   }
 
   getSelectedColor(): string {
@@ -134,6 +156,7 @@ export class NakamaService {
 
   async ensureSocketConnected(forceReconnect = false): Promise<void> {
     if (this.socket && forceReconnect) {
+      this.socket.disconnect(false);
       this.socket = null;
     }
     if (!this.socket) {
@@ -167,6 +190,14 @@ export class NakamaService {
     const socket = this.socket;
     if (!socket) return;
     socket.sendMatchState(matchId, 1, JSON.stringify({ seed }));
+  }
+
+  async sendDinoColor(matchId: string): Promise<void> {
+    if (this.socket) await this.socket.sendMatchState(matchId, 5, JSON.stringify({ color: this.selectedColor }));
+  }
+
+  async requestDinoColors(matchId: string): Promise<void> {
+    if (this.socket) await this.socket.sendMatchState(matchId, 6, JSON.stringify({}));
   }
 
   sendPosition(matchId: string, state: object) {
