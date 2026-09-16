@@ -28,7 +28,7 @@ export class Auth {
   private translations = {
     en: {
       emailPlaceholder: 'you@example.com', usernamePlaceholder: 'Choose your runner name',
-      passwordPlaceholder: 'Enter your password', signupPasswordPlaceholder: 'Create a password (8+ characters)',
+      passwordPlaceholder: "••••••••", signupPasswordPlaceholder: "••••••••",
       welcome: 'WELCOME BACK!',
       login: 'Login',
       signup: 'Sign up',
@@ -46,7 +46,7 @@ export class Auth {
 
     fr: {
       emailPlaceholder: 'vous@exemple.fr', usernamePlaceholder: 'Choisissez votre nom de joueur',
-      passwordPlaceholder: 'Saisissez votre mot de passe', signupPasswordPlaceholder: 'Cr\u00e9ez un mot de passe (8 caract\u00e8res minimum)',
+      passwordPlaceholder: "••••••••", signupPasswordPlaceholder: "••••••••",
       welcome: 'BON RETOUR !',
       login: 'Connexion',
       signup: "S'inscrire",
